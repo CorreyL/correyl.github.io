@@ -1,0 +1,14 @@
+Notes on HTML Coding:
+
+<a></a>: Anchor
+<a href=""></a>: Anchor for links
+<a name=""></a>: Anchor to allow links to bring you to specific part on page
+	Eg. <a name="top"></a>
+			...
+			<a href="#top">Go to Top</a> Would bring you to the top
+			
+<!-- This is a COMMENT -->
+
+<img src="banks.jpg" height="250"/>
+
+<table border="1" width="100%"></table>: 100% will fill up the whole space of the web browser regardless of the size of the window
