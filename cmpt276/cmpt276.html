@@ -33,8 +33,8 @@
 			<li><a href="https://github.com/Microsoft/cpprestsdk">Casablanca REST: C++ API for Microsoft Azure</a></li>
 			</b>
 		</ul>
-		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, the main components of which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores associated properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use music artists as an example:</br></br>
-		<table style="width:70%" border="1">
+		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:</br></br>
+		<center><table style="width:70%" border="1">
 			<tr>
 				<th>Partition</th>
 				<th>Row</th> 
@@ -71,8 +71,8 @@
 				<td>Krysten Ritter</td> 
 				<td>TV Show: Jessica Jones</td>
 			</tr>
-		</table></br>
-		Here we see that the Partition specifies the musician(s), the Row specifies the country they're from, and the JSON object for each entity has one property pair, the descriptor 'Genre' and the associated genre with the entity.
+		</table></br></center>
+		Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.
 	</p>
 	<p>
 		The back-end was set up as a tiered service as 4 different servers:</br>
@@ -151,13 +151,18 @@
 		<li>status_codes::NotFound (404): Table does not exist</li>
 		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
 		</div>
+		<p>
+		
+		</p>
 		<pre class="brush: cpp;">
 		if( paths[3] == "*" ){
+			// Initialize all required variables
 			table_query query {};
 			table_query_iterator end;
-			table_query_iterator it = table.execute_query(query);
+			table_query_iterator it = table.execute_query(query); // Since query is empty, this sets the table_query_iterator to the beginning
 			vector<value> key_vec;
 			prop_vals_t keys;
+			
 			while(it != end){ // This while loop iterates through the table until it finds the requested partition
 				if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
 					cout << "GET: " << it->partition_key() << " / " << it->row_key() << endl; 
@@ -185,21 +190,20 @@
 		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array</li></ul></ul>
 		</div>
 		<pre class="brush: cpp;">
-		if(paths[0] == read_entity_admin){
+	if(paths[0] == read_entity_admin){
 		unordered_map<string,string> stored_message = get_json_body(message);
 		if( stored_message.size() > 0 ){
+			// Initialize all required variables
 			table_query query {};
 			table_query_iterator end;
 			table_query_iterator it = table.execute_query(query);
 			table_entity entity;
 			prop_vals_t keys;
 			vector<value> key_vec;
-			
 			int equal {0};
 
 			while(it != end){
 				equal = 0;
-				
 				const table_entity::properties_type& properties = it->properties();
 				for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
 				{
@@ -208,20 +212,20 @@
 						equal++;
 					}
 				}
-				
 				if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
-				cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
-						keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
-						keys = get_properties(it->properties(), keys);
-						key_vec.push_back(value::object(keys));
+					cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
+					keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+					keys = get_properties(it->properties(), keys);
+					key_vec.push_back(value::object(keys));
 				}
-				
 				++it;
 			}
 			message.reply( status_codes::OK, value::array(key_vec) );
 			return;
-		}
-		</pre>
+		} //</pre>
+		<p>
+		The main challenge of this implementing these commands was understanding how the C++ REST API worked.
+		</p>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 		
