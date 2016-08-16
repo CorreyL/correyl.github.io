@@ -2,9 +2,68 @@
 
 <html>
 	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushBash.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
+		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
+		<script type="text/javascript">SyntaxHighlighter.all();</script>
+	
+		<link rel="stylesheet" type="text/css" href="../style.css"/>
 		<title>Digital Portfolio of Correy Lim</title>
 	</head>
 	<body>
-		<h3>Script to Download 'Gareth Emery Podcast'</h3>
+		<h3>Script to Download 'Gareth Emery Podcast'</h3></br>
+		During my exercise routines, I enjoy listening to <a href="">Electronic Dance Music</a> at times. In particular, the mixes <a href="">Gareth Emery</a> created for his podcasts from <!-- Years GEP was active --> to. Unfortunately, the website does not have an option to download all of the episodes at once, instead requiring one download at a time, as seen here:</br>
+		<img src="garethemeryarchive.jpg"/></br>
+		Instead of clicking the Download button 310 times, I decided to use my knowledge of Bash Scripting to do it for me.</br></br>
+		The main command used here is: <code><a href="https://www.gnu.org/software/wget/manual/wget.html">wget</a></code></br>
+		Given a valid URL, wget will download the specified file to the current directory.</br></br>
+		
+		Using this, I needed to figure out the URL prefix used for each episode.</br></br>
+		Episodes 1-68 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_{0[0-9][1-9]}</code>, where <code>{0[0-9][1-9]}</code> is the Regular Expression for episode numbers between 000-099.</br></br>
+		Episodes 69-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{[0-9]{3}}.m4a</code> where <code>{[0-9]{3}}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
+		
+		Adding a small wrinkle to this is episodes 1-44 are in the .mp3 file format, whereas episodes 45-310 are in the .m4a file format, hence the need for the first if block</br>
+		<pre class="brush: bash;">
+		if [ $i -lt 44 ]; then
+			wget "http://www.galexmusic.com/podcast/garethemerypodcast_00"$i".mp3"
+			# Eps 001-044 podcasts were in .mp3
+		</pre>
+		Episodes 44-69 are in m4a, hence
+		<pre class="brush: bash;">
+		elif [ $i -lt 69 ]; then
+			wget "http://www.galexmusic.com/podcast/garethemerypodcast_0"$i".m4a"</pre>
+		Finally, episodes 70-100 are in one else if block for the prefix 0[0-9]{2}, and the remaining episodes [0-9]{3} in the else block. Conviniently, at episode 100, the prefix URL changed to <code>http://podcast.galexmusic.com/*</code>
+		<pre class="brush: bash;">
+		elif [ $i -lt 100 ]; then
+			# URL Switched to http://podcast.galexmusic.com/*
+			wget "http://podcast.galexmusic.com/podcast/garethemerypodcast_0"$i".m4a"
+		else
+			wget "http://podcast.galexmusic.com/podcast/garethemerypodcast_"$i".m4a"
+		</pre>
+		Put it all together, and we have the resulting bash script</br>
+		<pre class="brush: bash;">
+			#!/bin/bash
+			#Bash Script to Download Archived Episodes of the Gareth Emery Podcast
+			#Episodes 1-68: http://www.galexmusic.com/podcast/garethemerypodcast_{0[0-9][1-9]}.m4a
+			#Episodes 69-310: http://podcast.galexmusic.com/podcast/garethemerypodcast_{[0-9]{3}}.m4a
+			for((i=1;i<=310;i++)) # For loop generating the numbers 0-310
+			do
+				if [ $i -lt 44 ]; then
+					wget "http://www.galexmusic.com/podcast/garethemerypodcast_00"$i".mp3"
+					# Eps 001-044 podcasts were in .mp3
+				elif [ $i -lt 69 ]; then
+					wget "http://www.galexmusic.com/podcast/garethemerypodcast_0"$i".m4a"
+				elif [ $i -lt 100 ]; then
+					wget "http://podcast.galexmusic.com/podcast/garethemerypodcast_0"$i".m4a"
+					# URL Switched to http://podcast.galexmusic.com/*
+				else
+					wget "http://podcast.galexmusic.com/podcast/garethemerypodcast_"$i".m4a"
+				fi
+			done
+		</pre>
+		Which downloaded all [Insert Size of Podcasts] GB worth of podcasts for me!
+		<img/> <!-- Image of Gareth Emery Podcasts downloaded goes here -->
 	</body>
 </html>

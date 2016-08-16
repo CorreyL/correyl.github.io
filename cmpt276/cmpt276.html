@@ -4,11 +4,10 @@
 	<head>
 		<!-- To display C++ Code -->
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<title>Hello SyntaxHighlighter</title>
-		<script type="text/javascript" src="scripts/shCore.js"></script>
-		<script type="text/javascript" src="scripts/shBrushCpp.js"></script>
-		<script type="text/javascript" src="scripts/shBrushPlain.js"></script>
-		<link type="text/css" rel="stylesheet" href="styles/shCoreDefault.css"/>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushCpp.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
+		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
 		<script type="text/javascript">SyntaxHighlighter.all();</script>
 	
 		<link rel="stylesheet" type="text/css" href="../style.css"/>
@@ -68,8 +67,8 @@
 		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
 		<code>$ curl -i -X post http://localhost:34568/CreateTable/MyTable</code></br></br>
 		The following is the C++ code found in BasicServer.cpp that handles this call.
-		<pre class="brush: cpp;">
 		<!-- C++ Code for CreateTableAdmin -->
+		<pre class="brush: cpp;">
 		/*
 			Top-level routine for processing all HTTP POST requests.
 		*/
