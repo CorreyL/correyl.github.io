@@ -33,7 +33,7 @@
 			<li><a href="https://github.com/Microsoft/cpprestsdk">Casablanca REST: C++ API for Microsoft Azure</a></li>
 			</b>
 		</ul>
-		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, the main components of which stored <i>entities</i> (equivalent rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores associated properties. Each property within the JSON Object is a pair of . To use music artists as an example:</br></br>
+		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, the main components of which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores associated properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use music artists as an example:</br></br>
 		<table style="width:70%" border="1">
 			<tr>
 				<th>Partition</th>
@@ -41,22 +41,38 @@
 				<th>JSON Object</th>
 			</tr>
 			<tr>
-				<td>Tegan & Sara</td>
-				<td>Canada</td> 
-				<td>Genre: Indie Pop</td>
+				<td>Musician</td>
+				<td>Tegan Quin</td> 
+				<td>Genre: Indie Pop</br>
+				Band: Tegan & Sara
+				</td>
 			</tr>
 			<tr>
-				<td>Banks</td>
-				<td>United States of America</td> 
-				<td>Genre: Alternative R&B</td>
+				<td>Musician</td>
+				<td>Banks</td> 
+				<td>Genre: Alternative R&B</br>
+				Latest Song: Gemini Feed
+				</td>
 			</tr>
 			<tr>
-				<td>Shura</td>
-				<td>United Kingdom</td> 
-				<td>Genre: Electropop</td>
+				<td>Musician</td>
+				<td>Shura</td> 
+				<td>Genre: Electropop</br>
+				Latest Album: Nothing's Real</td>
+			</tr>
+			<tr>
+				<td>Actor</td>
+				<td>Rami Malek</td> 
+				<td>TV Show: Mr. Robot</br>
+				</td>
+			</tr>
+			<tr>
+				<td>Actor</td>
+				<td>Krysten Ritter</td> 
+				<td>TV Show: Jessica Jones</td>
 			</tr>
 		</table></br>
-		Here we see that the Partition specifies the musician(s), the Row specifies the country they're from, and the JSON object contains the Genre.
+		Here we see that the Partition specifies the musician(s), the Row specifies the country they're from, and the JSON object for each entity has one property pair, the descriptor 'Genre' and the associated genre with the entity.
 	</p>
 	<p>
 		The back-end was set up as a tiered service as 4 different servers:</br>
@@ -73,7 +89,7 @@
 		</ul>
 		The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
 		<div style="margin-left: 1em;">
-		<b>Create Table</b>
+		<b>Create A Table</b>
 		<ul><li>HTTP method: POST</li>
 		<li>Operation: CreateTableAdmin</li>
 		<li>Parameters: (Table Name)</li>
@@ -123,7 +139,89 @@
 		}</pre>
 		The list of all commands in BasicServer can be found <a href=""><b>here</b></a>. </br></br>
 		
-		From the list above, we were tasked with implementing <a href="">ReadEntityAdmin</a> and <a href="">retrieving all entities from a specific partion</a></br></br>
+		From the list above, we were tasked with implementing two commands:</a></br></br>
+		
+		<div style="margin-left: 1em;">
+		<b>Get All Entities From A Specific Partition</b>
+		<ul><li>HTTP method: GET</li>
+		<li>Operation: (None)</li>
+		<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+		<li>Response codes:</li>
+		<ul><li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+		<li>status_codes::NotFound (404): Table does not exist</li>
+		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
+		</div>
+		<pre class="brush: cpp;">
+		if( paths[3] == "*" ){
+			table_query query {};
+			table_query_iterator end;
+			table_query_iterator it = table.execute_query(query);
+			vector<value> key_vec;
+			prop_vals_t keys;
+			while(it != end){ // This while loop iterates through the table until it finds the requested partition
+				if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
+					cout << "GET: " << it->partition_key() << " / " << it->row_key() << endl; 
+					keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+					keys = get_properties(it->properties(), keys);
+					key_vec.push_back(value::object(keys)); // A partition is found, so push it on to the vector of JSON values
+				}
+				++it;
+			}
+			if( keys.empty() ){ // The requested partition is not a part of the table
+				message.reply(status_codes::NotFound);
+				return;
+			}
+			message.reply(status_codes::OK, value::array(key_vec));
+			return; // Bug with Syntax Highlighter here =( </pre>
+		<div style="margin-left: 1em;">
+		
+		<b>Get All Entities Containing All Specified Properties</b>
+		<ul><li>HTTP method: GET</li>
+		<li>Operation: ReadEntityAdmin</li>
+		<li>Parameters: Table Name</li>
+		<li>Response codes:</li>
+		<ul><li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
+		<li>status_codes::NotFound (404): Table does not exist</li>
+		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array</li></ul></ul>
+		</div>
+		<pre class="brush: cpp;">
+		if(paths[0] == read_entity_admin){
+		unordered_map<string,string> stored_message = get_json_body(message);
+		if( stored_message.size() > 0 ){
+			table_query query {};
+			table_query_iterator end;
+			table_query_iterator it = table.execute_query(query);
+			table_entity entity;
+			prop_vals_t keys;
+			vector<value> key_vec;
+			
+			int equal {0};
+
+			while(it != end){
+				equal = 0;
+				
+				const table_entity::properties_type& properties = it->properties();
+				for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
+				{
+					unordered_map<string,string>::const_iterator got = stored_message.find(prop_it->first);
+					if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
+						equal++;
+					}
+				}
+				
+				if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
+				cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
+						keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+						keys = get_properties(it->properties(), keys);
+						key_vec.push_back(value::object(keys));
+				}
+				
+				++it;
+			}
+			message.reply( status_codes::OK, value::array(key_vec) );
+			return;
+		}
+		</pre>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 		
