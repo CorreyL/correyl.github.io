@@ -22,7 +22,11 @@
 		The back-end was set up as a tiered service as 4 different servers:</br>
 		<img src="cmpt276architecture.jpg"/></br>
 		<b>1. Low-Level Interface: Database Layer</b></br>
-		The Database Layer was an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensured that if the application needed to be moved to another Cloud Storage Service, such as Amazon DynamoDB or Google Cloud Datastore, the only code that needed to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br>
+		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/"><b>Google Cloud Datastore</b></a>, the only code that needed to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
+		
+		Calls to the Database Layer have two parts: An HTTP Request Method and a URI </br></br>
+		
+		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> were used to make calls to the server.
 		<pre class="brush: cpp;">
 		int main(){
 			cout << "Test" << endl;
