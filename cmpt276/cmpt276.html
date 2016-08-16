@@ -16,14 +16,23 @@
 	<h3>CMPT 276: Introduction to Software Engineering (January 2016 - April 2016)</h3>
 	<body>
 	<p>
-	In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
+		In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
 	</p>
 	<p>
-		The data was stored using <a href="https://azure.microsoft.com/en-us/">Microsoft Azure</a>, specifically their implementation of tables.
+		The back-end was set up as a tiered service as 4 different servers:</br>
+		<img src="cmpt276architecture.jpg"/></br>
+		<b>1. Low-Level Interface: Database Layer</b></br>
+		The Database Layer was an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensured that if the application needed to be moved to another Cloud Storage Service, such as Amazon DynamoDB or Google Cloud Datastore, the only code that needed to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br>
+		<pre class="brush: cpp;">
+		int main(){
+			cout << "Test" << endl;
+		}</pre>
+		<b>2. Authentication: Secure Record Access</b></br>
+		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
+		
+		<b>3. High-Level Interface: Session Layer</b></br>
+		</br>
 	</p>
-	<pre class="brush: cpp;">
-	int main(){
-		cout << "Test" << endl;
-	}</pre>
+
 </body>
 </html>
