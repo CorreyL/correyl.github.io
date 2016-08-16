@@ -8,7 +8,7 @@ a:link {color:black;
 a:visited {color:black;}
 a:hover {color:blue;}
 a:active {}
-ul {list-style-type: katakana;}
+ul {list-style-type: circle;}
 #idea {font-size:10px;
 		position:absolute;
 		top:96.5%;

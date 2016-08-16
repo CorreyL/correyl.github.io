@@ -7,6 +7,7 @@
 		<title>Hello SyntaxHighlighter</title>
 		<script type="text/javascript" src="scripts/shCore.js"></script>
 		<script type="text/javascript" src="scripts/shBrushCpp.js"></script>
+		<script type="text/javascript" src="scripts/shBrushPlain.js"></script>
 		<link type="text/css" rel="stylesheet" href="styles/shCoreDefault.css"/>
 		<script type="text/javascript">SyntaxHighlighter.all();</script>
 	
@@ -19,14 +20,35 @@
 		In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
 	</p>
 	<p>
+		The main components of the project are:
+		<ul>
+			<b>
+			<li><a href="https://azure.microsoft.com/en-us/">Microsoft Azure</a></li>
+			<li><a href="http://www.stroustrup.com/C++11FAQ.html">C++11</a></li>
+			<li><a href="https://github.com/Microsoft/cpprestsdk">Casablanca REST: C++ API for Microsoft Azure</a></li>
+			</b>
+		</ul>
+	</p>
+	<p>
 		The back-end was set up as a tiered service as 4 different servers:</br>
 		<img src="cmpt276architecture.jpg"/></br>
 		<b>1. Low-Level Interface: Database Layer</b></br>
 		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/"><b>Google Cloud Datastore</b></a>, the only code that needed to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
 		
-		Calls to the Database Layer have two parts: An HTTP Request Method and a URI </br></br>
-		
-		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> were used to make calls to the server.
+		Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
+		<ul>
+			<li>GET</li>
+			<li>POST</li>
+			<li>PUT</li>
+			<li>DELETE</li>
+		</ul>
+		The URI specifies the server being called, the command, and any corresponding arguments required by the command.</br>
+		Examples include:</br>
+		<ul>
+		</ul>
+		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> was used to make calls to the server. </br></br>
+		<pre class="brush: plain;">
+		$ curl -i -X post http://localhost:34568/CreateTable/MyTable</pre>
 		<pre class="brush: cpp;">
 		int main(){
 			cout << "Test" << endl;
