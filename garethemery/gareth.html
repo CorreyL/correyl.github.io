@@ -13,9 +13,9 @@
 		<title>Digital Portfolio of Correy Lim</title>
 	</head>
 	<body>
-		<h3>Script to Download 'Gareth Emery Podcast'</h3></br>
-		During my exercise routines, I enjoy listening to <a href="">Electronic Dance Music</a> at times. In particular, the mixes <a href="">Gareth Emery</a> created for his podcasts from <!-- Years GEP was active --> to. Unfortunately, the website does not have an option to download all of the episodes at once, instead requiring one download at a time, as seen here:</br>
-		<img src="garethemeryarchive.jpg"/></br>
+		<h3>Script to Download 'Gareth Emery Podcast'</h3>
+		During my exercise routines, or time spent coding, I enjoy listening to <a href="https://en.wikipedia.org/wiki/Electronic_dance_music">Electronic Dance Music</a> at times. In particular, the mixes <a href="https://en.wikipedia.org/wiki/Gareth_Emery">Gareth Emery</a> created for his podcasts from 2006 to 2014. Unfortunately, the website does not have an option to download all of the episodes at once, instead requiring one download at a time, as seen here:</br></br>
+		<img src="garethemeryarchive.jpg"/></br></br>
 		Instead of clicking the Download button 310 times, I decided to use my knowledge of Bash Scripting to do it for me.</br></br>
 		The main command used here is: <code><a href="https://www.gnu.org/software/wget/manual/wget.html">wget</a></code></br>
 		Given a valid URL, wget will download the specified file to the current directory.</br></br>
@@ -42,7 +42,7 @@
 		else
 			wget "http://podcast.galexmusic.com/podcast/garethemerypodcast_"$i".m4a"
 		</pre>
-		Put it all together, and we have the resulting bash script</br>
+		Put it all together, and we have the resulting bash script, that downloaded all [Insert Size of Podcasts] GB worth of podcasts for me!</br>
 		<pre class="brush: bash;">
 			#!/bin/bash
 			#Bash Script to Download Archived Episodes of the Gareth Emery Podcast
@@ -63,7 +63,6 @@
 				fi
 			done
 		</pre>
-		Which downloaded all [Insert Size of Podcasts] GB worth of podcasts for me!
 		<img/> <!-- Image of Gareth Emery Podcasts downloaded goes here -->
 	</body>
 </html>
