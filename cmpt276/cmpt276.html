@@ -12,6 +12,12 @@
 		<script type="text/javascript">SyntaxHighlighter.all();</script>
 	
 		<link rel="stylesheet" type="text/css" href="../style.css"/>
+		<style type="text/css">
+		.arg1{color:red;}
+		.arg2{color:green;}
+		.arg3{color:blue;}
+		.arg4{color:orange;}
+		</style>
 		<title>Digital Portfolio of Correy Lim</title>
 	</head>
 	<h3>CMPT 276: Introduction to Software Engineering (January 2016 - April 2016)</h3>
@@ -33,7 +39,7 @@
 		The back-end was set up as a tiered service as 4 different servers:</br>
 		<img src="cmpt276architecture.jpg"/></br>
 		<b>1. Low-Level Interface: Database Layer</b></br>
-		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/"><b>Google Cloud Datastore</b></a>, the only code that needed to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
+		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
 		
 		Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
 		<ul>
@@ -42,16 +48,57 @@
 			<li>PUT</li>
 			<li>DELETE</li>
 		</ul>
-		The URI specifies the server being called, the command, and any corresponding arguments required by the command.</br>
-		Examples include:</br>
-		<ul>
-		</ul>
-		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> was used to make calls to the server. </br></br>
-		<pre class="brush: plain;">
-		$ curl -i -X post http://localhost:34568/CreateTable/MyTable</pre>
+		The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
+		<div style="margin-left: 1em;">
+		<b>Create table</b>
+		<ul><li>HTTP method: POST</li>
+		<li>Operation: CreateTableAdmin</li>
+		<li>Parameters: (Table Name)</li>
+		<li>Response codes:</li>
+		<ul><li>status_codes::BadRequest (400): Missing table name</li>
+		<li>status_codes::Created (201): Table created</li>
+		<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
+		This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br>
+
+		Note: Microsoft Azure (and Amazon Web Services) rate-limit table creation and deletion commands. Do not write test scripts that routinely create or delete tables—they will start to time out.</br></br>
+		</div>
+		Which is performed by the URI:</br></br>
+		<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
+		The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
+		The Unix command <a href="https://curl.haxx.se/docs/manpage.html"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
+		<code>$ curl -i -X post http://localhost:34568/CreateTable/MyTable</code></br></br>
+		The following is the C++ code found in BasicServer.cpp that handles this call.
 		<pre class="brush: cpp;">
-		int main(){
-			cout << "Test" << endl;
+		<!-- C++ Code for CreateTableAdmin -->
+		/*
+			Top-level routine for processing all HTTP POST requests.
+		*/
+		void handle_post(http_request message) {
+			string path {uri::decode(message.relative_uri().path())};
+			cout << endl << "**** POST " << path << endl;
+			auto paths = uri::split_path(path);
+			// Need at least an operation and a table name
+			if (paths.size() < 2) {
+				message.reply(status_codes::BadRequest);
+				return;
+			}
+
+			string table_name {paths[1]};
+			cloud_table table {table_cache.lookup_table(table_name)};
+
+			// Create table (idempotent if table exists)
+			if (paths[0] == create_table) {
+				cout << "Create " << table_name << endl;
+				bool created {table.create_if_not_exists()};
+				cout << "Administrative table URI " << table.uri().primary_uri().to_string() << endl;
+				if (created)
+					message.reply(status_codes::Created); // Table is created (RC: 201)
+				else
+					message.reply(status_codes::Accepted); // Table already exists; unchanged (RC: 202)
+			}
+			else {
+				message.reply(status_codes::BadRequest); // No table name given (RC: 400)
+			}
 		}</pre>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>

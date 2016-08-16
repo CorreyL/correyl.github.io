@@ -1,6 +1,7 @@
 .websiteheader {color:#077264; 
 	font-family:verdana;
-	line-height:100%;}
+	line-height:100%;
+}
 body {font-family:verdana;
 			font-size:13px;}
 a:link {color:black;
@@ -13,3 +14,5 @@ ul {list-style-type: circle;}
 		position:absolute;
 		top:96.5%;
 		left:77%;}
+code{background:#F8F8FF; 
+		border:black 1px; padding:6px}​
