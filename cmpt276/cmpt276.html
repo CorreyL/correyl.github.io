@@ -33,6 +33,30 @@
 			<li><a href="https://github.com/Microsoft/cpprestsdk">Casablanca REST: C++ API for Microsoft Azure</a></li>
 			</b>
 		</ul>
+		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, the main components of which stored <i>entities</i> (equivalent rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores associated properties. Each property within the JSON Object is a pair of . To use music artists as an example:</br></br>
+		<table style="width:70%" border="1">
+			<tr>
+				<th>Partition</th>
+				<th>Row</th> 
+				<th>JSON Object</th>
+			</tr>
+			<tr>
+				<td>Tegan & Sara</td>
+				<td>Canada</td> 
+				<td>Genre: Indie Pop</td>
+			</tr>
+			<tr>
+				<td>Banks</td>
+				<td>United States of America</td> 
+				<td>Genre: Alternative R&B</td>
+			</tr>
+			<tr>
+				<td>Shura</td>
+				<td>United Kingdom</td> 
+				<td>Genre: Electropop</td>
+			</tr>
+		</table></br>
+		Here we see that the Partition specifies the musician(s), the Row specifies the country they're from, and the JSON object contains the Genre.
 	</p>
 	<p>
 		The back-end was set up as a tiered service as 4 different servers:</br>
@@ -49,7 +73,7 @@
 		</ul>
 		The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
 		<div style="margin-left: 1em;">
-		<b>Create table</b>
+		<b>Create Table</b>
 		<ul><li>HTTP method: POST</li>
 		<li>Operation: CreateTableAdmin</li>
 		<li>Parameters: (Table Name)</li>
@@ -57,9 +81,7 @@
 		<ul><li>status_codes::BadRequest (400): Missing table name</li>
 		<li>status_codes::Created (201): Table created</li>
 		<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
-		This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br>
-
-		Note: Microsoft Azure (and Amazon Web Services) rate-limit table creation and deletion commands. Do not write test scripts that routinely create or delete tables—they will start to time out.</br></br>
+		This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br></br>
 		</div>
 		Which is performed by the URI:</br></br>
 		<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
@@ -99,6 +121,9 @@
 				message.reply(status_codes::BadRequest); // No table name given (RC: 400)
 			}
 		}</pre>
+		The list of all commands in BasicServer can be found <a href=""><b>here</b></a>. </br></br>
+		
+		From the list above, we were tasked with implementing <a href="">ReadEntityAdmin</a> and <a href="">retrieving all entities from a specific partion</a></br></br>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 		

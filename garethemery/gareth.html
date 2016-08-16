@@ -24,8 +24,8 @@
 		Given a valid URL, wget will download the specified file to the current directory.</br></br>
 		
 		Using this, I needed to figure out the URL prefix used for each episode.</br></br>
-		Episodes 1-68 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_{0[0-9][1-9]}</code>, where <code>{0[0-9][1-9]}</code> is the Regular Expression for episode numbers between 001-099.</br></br>
-		Episodes 69-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{[0-9]{3}}.m4a</code> where <code>{[0-9]{3}}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
+		Episodes 1-99 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_{0[0-9][1-9]}</code>, where <code>{0[0-9][1-9]}</code> is the Regular Expression for episode numbers between 001-099.</br></br>
+		Episodes 100-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{[0-9]{3}}.m4a</code> where <code>{[0-9]{3}}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
 		
 		Adding a small wrinkle to this is episodes 1-44 are in the .mp3 file format, whereas episodes 45-310 are in the .m4a file format, hence the need for the first if block</br>
 		<pre class="brush: bash;">
@@ -37,7 +37,7 @@
 		<pre class="brush: bash;">
 		elif [ $i -lt 69 ]; then
 			wget "http://www.galexmusic.com/podcast/garethemerypodcast_0"$i".m4a"</pre>
-		Finally, episodes 70-100 are in one else if block for the prefix 0[0-9]{2}, and the remaining episodes [0-9]{3} in the else block. Conviniently, at episode 100, the prefix URL changed to <code>http://podcast.galexmusic.com/*</code>
+		Finally, episodes 70-100 are in one else if block for the prefix 0[0-9]{2}, and the remaining episodes [0-9]{3} in the else block. Conviniently, at episode 100, the prefix URL changed to</br></br> <code>http://podcast.galexmusic.com/*</code>
 		<pre class="brush: bash;">
 		elif [ $i -lt 100 ]; then
 			# URL Switched to http://podcast.galexmusic.com/*
