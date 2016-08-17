@@ -152,7 +152,9 @@
 		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
 		</div>
 		<p>
+		The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the array.</br></br>
 		
+		When all of the entities have been iterated through, the array consisting of all the entity's with the passed in partition is passed back.
 		</p>
 		<pre class="brush: cpp;">
 		if( paths[3] == "*" ){
@@ -161,7 +163,7 @@
 			table_query_iterator end;
 			table_query_iterator it = table.execute_query(query); // Since query is empty, this sets the table_query_iterator to the beginning
 			vector<value> key_vec;
-			prop_vals_t keys;
+			prop_vals_t keys; // Note that prop_vals_t is the class vector<pair<string,value>>;
 			
 			while(it != end){ // This while loop iterates through the table until it finds the requested partition
 				if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
@@ -179,16 +181,20 @@
 			message.reply(status_codes::OK, value::array(key_vec));
 			return; // Bug with Syntax Highlighter here =( </pre>
 		<div style="margin-left: 1em;">
-		
 		<b>Get All Entities Containing All Specified Properties</b>
-		<ul><li>HTTP method: GET</li>
-		<li>Operation: ReadEntityAdmin</li>
-		<li>Parameters: Table Name</li>
-		<li>Response codes:</li>
-		<ul><li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
-		<li>status_codes::NotFound (404): Table does not exist</li>
-		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array</li></ul></ul>
+		<ul>
+			<li>HTTP method: GET</li>
+			<li>Operation: ReadEntityAdmin</li>
+			<li>Parameters: Table Name</li>
+			<li>Response codes:</li>
+			<ul>
+			<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
+			<li>status_codes::NotFound (404): Table does not exist</li>
+			<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array</li></ul></ul>
 		</div>
+		<p>
+		This command 
+		</p>
 		<pre class="brush: cpp;">
 	if(paths[0] == read_entity_admin){
 		unordered_map<string,string> stored_message = get_json_body(message);
@@ -198,7 +204,7 @@
 			table_query_iterator end;
 			table_query_iterator it = table.execute_query(query);
 			table_entity entity;
-			prop_vals_t keys;
+			prop_vals_t keys; // Note that prop_vals_t is the class vector<pair<string,value>>;
 			vector<value> key_vec;
 			int equal {0};
 
