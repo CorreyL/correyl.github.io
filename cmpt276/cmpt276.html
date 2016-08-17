@@ -30,7 +30,7 @@
 			<b>
 			<li><a href="https://azure.microsoft.com/en-us/">Microsoft Azure</a></li>
 			<li><a href="http://www.stroustrup.com/C++11FAQ.html">C++11</a></li>
-			<li><a href="https://github.com/Microsoft/cpprestsdk">Casablanca REST: C++ API for Microsoft Azure</a></li>
+			<li><a href="https://microsoft.github.io/cpprestsdk/annotated.html">Casablanca REST: C++ API for Microsoft Azure</a></li>
 			</b>
 		</ul>
 		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/">Azure Table service</a>, which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:</br></br>
@@ -256,7 +256,7 @@
 			}
 		}</pre>
 		<p>
-		The main challenge of implementing these commands was understanding how the C++ REST API worked.
+		While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html"><b>large C++ API</b></a>, and thus was getting acclimated with utilizing these new tools.
 		</p>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
