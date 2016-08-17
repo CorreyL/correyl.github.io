@@ -161,7 +161,7 @@
 			// Initialize all required variables
 			table_query query {};
 			table_query_iterator end;
-			table_query_iterator it = table.execute_query(query); // Since query is empty, this sets the table_query_iterator, it, to the beginning
+			table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
 			vector&lt;value&gt; key_vec; // The JSON array to be passed back when the iterator has gone through all entities
 			prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
 			
@@ -209,6 +209,16 @@
 			}
 		}
 		</pre>
+		Once all of the properties of the current entity have been iterated through, we check the value of equal against the size of the JSON Body, which is determined by the number of properties stored within it. Given that they're equivalent, then the current entity contains all the passed in properties, thus it needs to be pushed on to the JSON Array and returned.
+		<pre class="brush: cpp;">
+		if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
+			cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
+			keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+			keys = get_properties(it->properties(), keys);
+			key_vec.push_back(value::object(keys));
+		}
+		</pre>
+		This process is repeated until all the entities in the table have been iterated through, and all matching entities are passed back in the JSON Array. We get the resulting body of code.
 		</p>
 		<pre class="brush: cpp;">
 		if(paths[0] == read_entity_admin){
@@ -217,8 +227,8 @@
 				// Initialize all required variables
 				table_query query {};
 				table_query_iterator end;
-				table_query_iterator it = table.execute_query(query);
-				table_entity entity;
+				table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
+				table_entity entity; // The JSON array to be passed back when the iterator has gone through all entities
 				prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
 				vector&lt;value&gt; key_vec;
 				int equal {0};
@@ -243,7 +253,8 @@
 				}
 				message.reply( status_codes::OK, value::array(key_vec) );
 				return;
-			}</pre>
+			}
+		}</pre>
 		<p>
 		The main challenge of implementing these commands was understanding how the C++ REST API worked.
 		</p>
