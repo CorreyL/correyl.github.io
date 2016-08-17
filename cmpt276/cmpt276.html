@@ -139,7 +139,7 @@
 		}</pre>
 		The list of all commands in BasicServer can be found <a href=""><b>here</b></a>. </br></br>
 		
-		From the list above, we were tasked with implementing two commands:</a></br></br>
+		From the list above, we were tasked with implementing two commands in the Database Layer:</a></br></br>
 		
 		<div style="margin-left: 1em;">
 		<b>Get All Entities From A Specific Partition</b>
@@ -152,18 +152,18 @@
 		<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
 		</div>
 		<p>
-		The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the array.</br></br>
+		The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the JSON array.</br></br>
 		
-		When all of the entities have been iterated through, the array consisting of all the entity's with the passed in partition is passed back.
+		When all of the entities have been iterated through, the JSON array consisting of all the entity's with the passed in partition is passed back.
 		</p>
 		<pre class="brush: cpp;">
 		if( paths[3] == "*" ){
 			// Initialize all required variables
 			table_query query {};
 			table_query_iterator end;
-			table_query_iterator it = table.execute_query(query); // Since query is empty, this sets the table_query_iterator to the beginning
-			vector<value> key_vec;
-			prop_vals_t keys; // Note that prop_vals_t is the class vector<pair<string,value>>;
+			table_query_iterator it = table.execute_query(query); // Since query is empty, this sets the table_query_iterator, it, to the beginning
+			vector&lt;value&gt; key_vec; // The JSON array to be passed back when the iterator has gone through all entities
+			prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
 			
 			while(it != end){ // This while loop iterates through the table until it finds the requested partition
 				if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
@@ -179,7 +179,7 @@
 				return;
 			}
 			message.reply(status_codes::OK, value::array(key_vec));
-			return; // Bug with Syntax Highlighter here =( </pre>
+			return; </pre>
 		<div style="margin-left: 1em;">
 		<b>Get All Entities Containing All Specified Properties</b>
 		<ul>
@@ -190,47 +190,62 @@
 			<ul>
 			<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
 			<li>status_codes::NotFound (404): Table does not exist</li>
-			<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array</li></ul></ul>
+			<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li></ul></ul>
 		</div>
 		<p>
-		This command 
+		This command requires a passed in JSON object in order for the program to know what properties to look for. We store this in the variable 'stored_message' as an unordered_map&lt;string,string&gt;.</br>
 		</p>
 		<pre class="brush: cpp;">
-	if(paths[0] == read_entity_admin){
-		unordered_map<string,string> stored_message = get_json_body(message);
-		if( stored_message.size() > 0 ){
-			// Initialize all required variables
-			table_query query {};
-			table_query_iterator end;
-			table_query_iterator it = table.execute_query(query);
-			table_entity entity;
-			prop_vals_t keys; // Note that prop_vals_t is the class vector<pair<string,value>>;
-			vector<value> key_vec;
-			int equal {0};
-
-			while(it != end){
-				equal = 0;
-				const table_entity::properties_type& properties = it->properties();
-				for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
-				{
-					unordered_map<string,string>::const_iterator got = stored_message.find(prop_it->first);
-					if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
-						equal++;
-					}
-				}
-				if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
-					cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
-					keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
-					keys = get_properties(it->properties(), keys);
-					key_vec.push_back(value::object(keys));
-				}
-				++it;
-			}
-			message.reply( status_codes::OK, value::array(key_vec) );
-			return;
-		} //</pre>
+		unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command </pre>
 		<p>
-		The main challenge of this implementing these commands was understanding how the C++ REST API worked.
+		For each entity the iterator is at, the function begins by retrieving all the properties of the current entity, and iterating through all the property names, incrementing the variable 'equal' given that the current property matched one of the properties in the passed in JSON Body.</br>
+		<pre class="brush: cpp;">
+		const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
+		for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
+		{
+			unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
+			if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
+				equal++;
+			}
+		}
+		</pre>
+		</p>
+		<pre class="brush: cpp;">
+		if(paths[0] == read_entity_admin){
+			unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command
+			if( stored_message.size() > 0 ){
+				// Initialize all required variables
+				table_query query {};
+				table_query_iterator end;
+				table_query_iterator it = table.execute_query(query);
+				table_entity entity;
+				prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
+				vector&lt;value&gt; key_vec;
+				int equal {0};
+
+				while(it != end){
+					equal = 0;
+					const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
+					for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
+					{
+						unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
+						if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
+							equal++;
+						}
+					}
+					if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
+						cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
+						keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+						keys = get_properties(it->properties(), keys);
+						key_vec.push_back(value::object(keys));
+					}
+					++it;
+				}
+				message.reply( status_codes::OK, value::array(key_vec) );
+				return;
+			}</pre>
+		<p>
+		The main challenge of implementing these commands was understanding how the C++ REST API worked.
 		</p>
 		<b>2. Authentication: Secure Record Access</b></br>
 		The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
