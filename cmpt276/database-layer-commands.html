@@ -5,6 +5,7 @@
 		<link rel="stylesheet" type="text/css" href="../style.css"/>
 	</head>
 	<body>
+		<h2>Already Implemented</h2>
 		<div class="tableofcontents" style="margin-left: 1em;">
 			<b>Create A Table</b>
 			<ul><li>HTTP method: POST</li>
@@ -93,7 +94,8 @@
 				</ul>
 			</ul>
 			<b>Result:</b> If the table exists and the entity exists within that table, the response body is a single JSON object. The object has a property for every property stored for the entity in the database. The values of the partition and row are not included (because the caller had to know them already in order to retrieve the entity).
-		</div></br>
+		</div>
+		<h2>Assigned to Implement</h2>
 		<div class="tableofcontents" style="margin-left: 1em;">
 			<b>Get All Entities From A Specific Partition</b>
 			<ul>
@@ -108,19 +110,65 @@
 				</ul>
 			</ul>
 		</div></br>
-		<div class="tableofcontents" style="margin-left: 1em;">
-				<b>Get All Entities From A Specific Partition</b>
-				<ul>
+		<div class="tableofcontents" id="database-command2" style="margin-left: 1em;">
+			<b>Get All Entities Containing All Specified Properties</b>
+			<ul>
 				<li>HTTP method: GET</li>
-				<li>Operation: (None)</li>
-				<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+				<li>Operation: ReadEntityAdmin</li>
+				<li>Parameters: Table Name</li>
 				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+				<b>Add the Specified Property (Name/Value Pair) To All Entities</b>
+				<ul>
+					<li>HTTP method: PUT</li>
+					<li>Operation: AddProperty</li>
+					<li>Parameters: Table Name</li>
+					<li>Body: JSON object with a single name / value pair. This name value pair will be added as a property to every entity in the specified table. If an entity already has that property, whatever value it has already will be replaced by the value provided in this object.</li>
+					<li>Response codes:</li>
 					<ul>
-						<li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+						<li>status_codes::BadRequest (400): Missing table name, Missing JSON body</li>
 						<li>status_codes::NotFound (404): Table does not exist</li>
-						<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li>
+						<li>status_codes::OK (200): Table found and all entities extended with the specified name/value property.</li>
 					</ul>
 				</ul>
-			</div>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Update the Specified Property In All Entities</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: UpdateProperty</li>
+				<li>Parameters: Table Name</li>
+				<li>Body: JSON object with a single name / value pair. If an entity has a property matching the specified name, the value of that property is set to the specified value. For example, given an message body of {"visited": "yes"}, this operation would search every entity in the specified table, ignoring those that did not have a property visited, and for those entities having the property visited, setting it to "yes".</body>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name, missing JSON body</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table found and all entities with the specified property name set to the specified value</li>
+				</ul>
+			</ul>
+	</div>
 	</body>
 </html>
+<!-- Template
+	<div class="tableofcontents" style="margin-left: 1em;">
+			<b></b>
+			<ul>
+				<li>HTTP method: </li>
+				<li>Operation: </li>
+				<li>Parameters: </li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): </li>
+					<li>status_codes::NotFound (404): t</li>
+					<li>status_codes::OK (200): .</li>
+				</ul>
+			</ul>
+	</div>
+-->
