@@ -31,11 +31,21 @@
 					<li><a href="#preface">Preface</a></li>
 					<li><a href="#database-layer">Low-Level Interface: Database Layer</a></li>
 						<ul>
+							<li><a href="#database-introduction">Introduction</a></li>
+							<li><a href="#database-example">Example of A Call to the Server</a></li>
 							<li><a href="#database-commands">List of All Commands</a></li>
-							<li><a href="#database-command1">Get All Entities From A Specific Partition</a></li>
-							<li><a href="#database-command2">Get All Entities Containing All Specified Properties</a></li>
+							<li><a href="#database-command1">Command: Get All Entities From A Specific Partition</a></li>
+							<li><a href="#database-command2">Command: Get All Entities Containing All Specified Properties</a></li>
+							<li><a href="#database-conclusion">Conclusion</a></li>
+							<li><a href="#database-source">Source Code</a></li>
 						</ul>
 					<li><a href="#authentication-layer">Authentication: Secure Record Access</a></li>
+						<ul>
+						<li><a href="#auth-introduction">Introduction</a></li>
+						<li><a href="#auth-server">Authentication Server</a></li>
+						<li><a href="#auth-command1">Command: Get A Read Token</a></li>
+						<li><a href="#auth-command2">Command: Get An Update Token</a></li>
+						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
 				</table>
 			</div>
@@ -106,6 +116,7 @@
 		<div class="section" id="database-layer">
 			<p>
 				<h2>1. Low-Level Interface: Database Layer (BasicServer.cpp)</h2>
+				<h1 id="database-introduction">Introduction</h1>
 				The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/" target="_parent"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg" target="_parent"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/" target="_parent"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
 				
 				Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
@@ -115,8 +126,10 @@
 					<li>PUT</li>
 					<li>DELETE</li>
 				</ul>
-				The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br>
+				The URI specifies the server being called, the command, and any corresponding arguments required by the command. 
 			</p>
+			<h1 id="database-example">Example of A Call to the Server</h1>
+			The simplest command to demonstrate a call to the server is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
 			<div class ="tableofcontents" style="margin-left: 1em;"> <!-- Change the class so that it doesn't go across the width of the page. -->
 				<b>Create A Table</b>
 				<ul>
@@ -170,9 +183,9 @@
 					message.reply(status_codes::BadRequest); // No table name given (RC: 400)
 				}
 			}</pre>
-			<div id="database-commands">The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank"><b>here</b></a>.</div></br>
-			
-			<div id="database-command1">From the list above, we were tasked with implementing two commands in the Database Layer:</div></br>
+			<div id="database-commands">The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank"><b>here</b></a></div></br>
+			From the list above, we were tasked with implementing two commands in the Database Layer:
+			<h1 id="database-command1">Get All Entities From A Specific Partition</h1>
 			<div class="tableofcontents" style="margin-left: 1em;">
 				<b>Get All Entities From A Specific Partition</b>
 				<ul>
@@ -217,6 +230,7 @@
 				message.reply(status_codes::OK, value::array(key_vec));
 				return;
 			}</pre>
+			<h1 id="database-command2">Get All Entities Containing All Specified Properties</h1>
 			<div class="tableofcontents" id="database-command2" style="margin-left: 1em;">
 			<b>Get All Entities Containing All Specified Properties</b>
 			<ul>
@@ -294,15 +308,17 @@
 					return;
 				}
 			}</pre>
+			<h1 id="database-conclusion">Conclusion</h1>
 			<p>
 				While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools by understanding the commands already implemented, then implementing new commands according to a set of specifications.
 			</p>
 		</div>
 		<div class="section" id="authentication-layer">
 			<h2>2. Authentication: Secure Record Access (AuthServer.cpp)</h2>
+			<h1 id="auth-introduction">Introduction</h1>
 			The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 			This authorization server provides the authorization service. Clients submit a name and password. If the name and password match the values stored in the special table AuthTable, the authentication server asks Azure to generate an access token for that user. This token will allow the user to read or update exactly one entity in one table. Tokens are only good for 24 hours after they are issued.
-			<h1>Authentication Server</h1>
+			<h1 id="auth-server">Authentication Server</h1>
 			In order to keep track of the registered username & password combinations, we created a separate Microsoft Azure table named AuthTable, which has the following attributes:</br></br>
 			<div class="tableofcontents" style="margin-left: 1em;">
 				<b>AuthTable</b>
@@ -322,7 +338,40 @@
 
 				When a user is added to AuthTable, their entry will also have to be added to DataTable using curl.
 			</div></br>
-			All of the commands for the Authentication Server can be found <b><a href="auth-layer-commands.html" target="_blank">here</a></b>.
+			There are only two commands that exist for the Authentication Server:
+			<ol>
+			<li><a href="">Get A Read Token</a></li>
+			<li><a href="">Get An Update Toke</a></li>
+			</ol>
+			<h1 id="auth-command1">Get A Read Token</h1>
+			<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Get A Read Token</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: GetReadToken</li>
+				<li>Parameters: Userid</li>
+				<li>Body: JSON object with the single property Password whose value is a password string. A password is an arbitrarily long sequence of printable 7-Bit ASCII characters</li>
+				<li>Response codes: </li>
+				<ul>
+					<li>status_codes::BadRequest (400): The userid was missing from the URI, the message body did not have a property named 'Password', the message body included one or more properties other than Password, or the password was empty or included characters not in the printable 7-bit ASCII range</li>
+					<li>status_codes::NotFound (404): The userid was not found in the table or it was found but the password stored in the table did not match the password provided by the client. Note: For security reasons, both these cases produce a NotFound result</li>
+					<li>status_codes::OK (200): Token returned. The response body will be a JSON object containing the single property token, whose value is a string representing the token. Azure tokens are about 100 characters long</li>
+				</ul>
+			</ul>
+			Note: For the purposes of this project, we the passwords were sent over http. In a real system, calls to the authentication server would be done via https rather than http.
+			</div>
+			<h1 id="auth-command2">Get An Update Token</h1>
+			<div class="tableofcontents" style="margin-left: 1em;">
+				<b>Get An Update Token</b>
+				<p>This operation has the same specification as "Get A Read Token", except for the following:</p>
+				<ul>
+					<li>Operation: GetUpdateToken</li>
+					<li>Response codes:</li>
+					<ul>
+						<li>status_codes::OK (200): The returned token permits update operations as well as reads.</li>
+					</ul>
+				</ul>
+			</div>
 		</div>
 		<div class="section" id="session-layer">
 			<h2>3. High-Level Interface: Session Layer</h2>
