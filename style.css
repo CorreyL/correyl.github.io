@@ -22,6 +22,10 @@ div.tableofcontents ul{
 	margin-top: 0px;
   margin-bottom: 0px;
 }
+div.tableofcontents ol{
+	margin-top: 0px;
+  margin-bottom: 0px;
+}
 div.document h2{
     background-color: #f2f2f2;
     font-weight: normal;
@@ -29,6 +33,9 @@ div.document h2{
     border-bottom: 1px solid #ccc;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 30px;
+}
+div.section h1{
+	font-weight:normal;
 }
 div.bottom {
     position: fixed;
