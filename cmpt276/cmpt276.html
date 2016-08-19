@@ -22,253 +22,277 @@
 	</head>
 	<body>
 	<h3>CMPT 276: Introduction to Software Engineering (January 2016 - April 2016)</h3>
-	<h2>Table of Contents</h2>
-	<h2>Preface</h2>
-	<p>
-		In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
-	</p>
-	<p>
-		The main components of the project are:
-		<ul>
-			<b>
-			<li><a href="https://azure.microsoft.com/en-us/" target="_parent">Microsoft Azure</a></li>
-			<li><a href="http://www.stroustrup.com/C++11FAQ.html" target="_parent">C++11</a></li>
-			<li><a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent">Casablanca REST: C++ API for Microsoft Azure</a></li>
-			</b>
-		</ul>
-	</p>
-	<p>
-		We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/" target="_parent">Azure Table service</a>, which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:
-	</p>
-	<center><table style="width:70%" border="1">
-		<tr>
-			<th>Partition</th>
-			<th>Row</th> 
-			<th>JSON Object</th>
-		</tr>
-		<tr>
-			<td>Musician</td>
-			<td><a href="https://en.wikipedia.org/wiki/Tegan_and_Sara" target="_parent">Tegan Quin</a></td> 
-			<td>Genre: Indie Pop</br>
-			Band: Tegan & Sara
-			</td>
-		</tr>
-		<tr>
-			<td>Musician</td>
-			<td><a href="https://en.wikipedia.org/wiki/Banks_(singer)" target="_parent">Banks</a></td> 
-			<td>Genre: Alternative R&B</br>
-			Latest Song: Gemini Feed
-			</td>
-		</tr>
-		<tr>
-			<td>Musician</td>
-			<td><a href="https://en.wikipedia.org/wiki/Shura_(musician)" target="_parent">Shura</a></td> 
-			<td>Genre: Electropop</br>
-			Latest Album: Nothing's Real</td>
-		</tr>
-		<tr>
-			<td>Actor</td>
-			<td><a href="https://en.wikipedia.org/wiki/Rami_Malek" target="_parent">Rami Malek</a></td> 
-			<td>TV Show: <a href="https://en.wikipedia.org/wiki/Mr._Robot_(TV_series)" target="_parent">Mr. Robot</a></br>
-			</td>
-		</tr>
-		<tr>
-			<td>Actor</td>
-			<td><a href="https://en.wikipedia.org/wiki/Krysten_Ritter" target="_parent">Krysten Ritter</a></td> 
-			<td>TV Show: <a href="https://en.wikipedia.org/wiki/Jessica_Jones_(TV_series)" target="_parent">Jessica Jones</a></td>
-		</tr>
-	</table></br></center>
-	<p>
-		Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
-		The back-end was set up as a tiered service as 4 different servers:</br>
-		<center><img src="cmpt276architecture.jpg"/></br></center>
-		<h2>1. Low-Level Interface: Database Layer</h2>
-		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/" target="_parent"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg" target="_parent"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/" target="_parent"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
-		
-		Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
-		<ul>
-			<li>GET</li>
-			<li>POST</li>
-			<li>PUT</li>
-			<li>DELETE</li>
-		</ul>
-		The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
-	</p>
-	<div style="margin-left: 1em;">
-	<b>Create A Table</b>
-	<ul><li>HTTP method: POST</li>
-	<li>Operation: CreateTableAdmin</li>
-	<li>Parameters: (Table Name)</li>
-	<li>Response codes:</li>
-	<ul><li>status_codes::BadRequest (400): Missing table name</li>
-	<li>status_codes::Created (201): Table created</li>
-	<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
-	This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br></br>
-	</div>
-	Which is performed by the URI:</br></br>
-	<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
-	The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
-	The Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
-	<code>$ curl -i -X post http://localhost:34568/CreateTable/MyTable</code></br></br>
-	The following is the C++ code found in BasicServer.cpp that handles this call.
-	<!-- C++ Code for CreateTableAdmin -->
-	<pre class="brush: cpp;">
-	/*
-		Top-level routine for processing all HTTP POST requests.
-	*/
-	void handle_post(http_request message) {
-		string path {uri::decode(message.relative_uri().path())};
-		cout << endl << "**** POST " << path << endl;
-		auto paths = uri::split_path(path);
-		// Need at least an operation and a table name
-		if (paths.size() < 2) {
-			message.reply(status_codes::BadRequest);
-			return;
-		}
+	<div class="document">
+		<div id="table-of-contents">
+			<h2>Table of Contents</h2>
+			<body>
+			<div class="tableofcontents">
+				<table>
+					<li><a href="#preface">Preface</a></li>
+					<li><a href="#database-layer">Low-Level Interface: Database Layer</a></li>
+					<li><a href="#authentication-layer">Authentication: Secure Record Access</a></li>
+					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
+				</table>
+			</div>
+			</body>
+		</div>
+		<div class="section" id="preface">
+		<h2>Preface</h2>
+		<p>
+			In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
+		</p>
+		<p>
+			The main components of the project are:
+			<ul>
+				<b>
+				<li><a href="https://azure.microsoft.com/en-us/" target="_parent">Microsoft Azure</a></li>
+				<li><a href="http://www.stroustrup.com/C++11FAQ.html" target="_parent">C++11</a></li>
+				<li><a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent">Casablanca REST: C++ API for Microsoft Azure</a></li>
+				</b>
+			</ul>
+		</p>
+		<p>
+			We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/" target="_parent">Azure Table service</a>, which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:
+		</p>
+		<center><table style="width:70%" border="1">
+			<tr>
+				<th>Partition</th>
+				<th>Row</th> 
+				<th>JSON Object</th>
+			</tr>
+			<tr>
+				<td>Musician</td>
+				<td><a href="https://en.wikipedia.org/wiki/Tegan_and_Sara" target="_parent">Tegan Quin</a></td> 
+				<td>Genre: Indie Pop</br>
+				Band: Tegan & Sara
+				</td>
+			</tr>
+			<tr>
+				<td>Musician</td>
+				<td><a href="https://en.wikipedia.org/wiki/Banks_(singer)" target="_parent">Banks</a></td> 
+				<td>Genre: Alternative R&B</br>
+				Latest Song: Gemini Feed
+				</td>
+			</tr>
+			<tr>
+				<td>Musician</td>
+				<td><a href="https://en.wikipedia.org/wiki/Shura_(musician)" target="_parent">Shura</a></td> 
+				<td>Genre: Electropop</br>
+				Latest Album: Nothing's Real</td>
+			</tr>
+			<tr>
+				<td>Actor</td>
+				<td><a href="https://en.wikipedia.org/wiki/Rami_Malek" target="_parent">Rami Malek</a></td> 
+				<td>TV Show: <a href="https://en.wikipedia.org/wiki/Mr._Robot_(TV_series)" target="_parent">Mr. Robot</a></br>
+				</td>
+			</tr>
+			<tr>
+				<td>Actor</td>
+				<td><a href="https://en.wikipedia.org/wiki/Krysten_Ritter" target="_parent">Krysten Ritter</a></td> 
+				<td>TV Show: <a href="https://en.wikipedia.org/wiki/Jessica_Jones_(TV_series)" target="_parent">Jessica Jones</a></td>
+			</tr>
+		</table></br></center>
+		<p>
+			Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
+			The back-end was set up as a tiered service as 4 different servers:</br>
+			<center><img src="cmpt276architecture.jpg"/></br></center>
+		</p>
+		</div>	
+		<div class="section" id="database-layer">
+			<p>
+				<h2>1. Low-Level Interface: Database Layer</h2>
+				The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/" target="_parent"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg" target="_parent"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/" target="_parent"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
+				
+				Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
+				<ul>
+					<li>GET</li>
+					<li>POST</li>
+					<li>PUT</li>
+					<li>DELETE</li>
+				</ul>
+				The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
+			</p>
+			<div style="margin-left: 1em;">
+			<b>Create A Table</b>
+			<ul><li>HTTP method: POST</li>
+			<li>Operation: CreateTableAdmin</li>
+			<li>Parameters: (Table Name)</li>
+			<li>Response codes:</li>
+			<ul><li>status_codes::BadRequest (400): Missing table name</li>
+			<li>status_codes::Created (201): Table created</li>
+			<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
+			This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br></br>
+			</div>
+			Which is performed by the URI:</br></br>
+			<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
+			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
+			The Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
+			<code>$ curl -i -X post http://localhost:34568/CreateTable/MyTable</code></br></br>
+			The following is the C++ code found in BasicServer.cpp that handles this call.
+			<!-- C++ Code for CreateTableAdmin -->
+			<pre class="brush: cpp;">
+			/*
+				Top-level routine for processing all HTTP POST requests.
+			*/
+			void handle_post(http_request message) {
+				string path {uri::decode(message.relative_uri().path())};
+				cout << endl << "**** POST " << path << endl;
+				auto paths = uri::split_path(path);
+				// Need at least an operation and a table name
+				if (paths.size() < 2) {
+					message.reply(status_codes::BadRequest);
+					return;
+				}
 
-		string table_name {paths[1]};
-		cloud_table table {table_cache.lookup_table(table_name)};
+				string table_name {paths[1]};
+				cloud_table table {table_cache.lookup_table(table_name)};
 
-		// Create table (idempotent if table exists)
-		if (paths[0] == create_table) {
-			cout << "Create " << table_name << endl;
-			bool created {table.create_if_not_exists()};
-			cout << "Administrative table URI " << table.uri().primary_uri().to_string() << endl;
-			if (created)
-				message.reply(status_codes::Created); // Table is created (RC: 201)
-			else
-				message.reply(status_codes::Accepted); // Table already exists; unchanged (RC: 202)
-		}
-		else {
-			message.reply(status_codes::BadRequest); // No table name given (RC: 400)
-		}
-	}</pre>
-	The list of all commands in BasicServer can be found <a href=""><b>here</b></a>. </br></br>
-	
-	From the list above, we were tasked with implementing two commands in the Database Layer:</a></br></br>
-	
-	<div style="margin-left: 1em;">
-	<b>Get All Entities From A Specific Partition</b>
-	<ul><li>HTTP method: GET</li>
-	<li>Operation: (None)</li>
-	<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
-	<li>Response codes:</li>
-	<ul><li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
-	<li>status_codes::NotFound (404): Table does not exist</li>
-	<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
-	</div>
-	<p>
-	The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the JSON array.</br></br>
-	
-	When all of the entities have been iterated through, the JSON array consisting of all the entity's with the passed in partition is passed back.
-	</p>
-	<pre class="brush: cpp;">
-	if( paths[3] == "*" ){
-		// Initialize all required variables
-		table_query query {};
-		table_query_iterator end;
-		table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
-		vector&lt;value&gt; key_vec; // The JSON array to be passed back when the iterator has gone through all entities
-		prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
-		
-		while(it != end){ // This while loop iterates through the table until it finds the requested partition
-			if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
-				cout << "GET: " << it->partition_key() << " / " << it->row_key() << endl; 
+				// Create table (idempotent if table exists)
+				if (paths[0] == create_table) {
+					cout << "Create " << table_name << endl;
+					bool created {table.create_if_not_exists()};
+					cout << "Administrative table URI " << table.uri().primary_uri().to_string() << endl;
+					if (created)
+						message.reply(status_codes::Created); // Table is created (RC: 201)
+					else
+						message.reply(status_codes::Accepted); // Table already exists; unchanged (RC: 202)
+				}
+				else {
+					message.reply(status_codes::BadRequest); // No table name given (RC: 400)
+				}
+			}</pre>
+			The list of all commands in BasicServer can be found <a href=""><b>here</b></a>. </br></br>
+			
+			From the list above, we were tasked with implementing two commands in the Database Layer:</a></br></br>
+			
+			<div style="margin-left: 1em;">
+			<b>Get All Entities From A Specific Partition</b>
+			<ul><li>HTTP method: GET</li>
+			<li>Operation: (None)</li>
+			<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+			<li>Response codes:</li>
+			<ul><li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+			<li>status_codes::NotFound (404): Table does not exist</li>
+			<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
+			</div>
+			<p>
+			The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the JSON array.</br></br>
+			
+			When all of the entities have been iterated through, the JSON array consisting of all the entity's with the passed in partition is passed back.
+			</p>
+			<pre class="brush: cpp;">
+			if( paths[3] == "*" ){
+				// Initialize all required variables
+				table_query query {};
+				table_query_iterator end;
+				table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
+				vector&lt;value&gt; key_vec; // The JSON array to be passed back when the iterator has gone through all entities
+				prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
+				
+				while(it != end){ // This while loop iterates through the table until it finds the requested partition
+					if( paths[2] == it->partition_key() ){ // If the specified partition matches a partition in the table
+						cout << "GET: " << it->partition_key() << " / " << it->row_key() << endl; 
+						keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+						keys = get_properties(it->properties(), keys);
+						key_vec.push_back(value::object(keys)); // A partition is found, so push it on to the vector of JSON values
+					}
+					++it;
+				}
+				if( keys.empty() ){ // The requested partition is not a part of the table
+					message.reply(status_codes::NotFound);
+					return;
+				}
+				message.reply(status_codes::OK, value::array(key_vec));
+				return;
+			}</pre>
+			<div style="margin-left: 1em;">
+			<b>Get All Entities Containing All Specified Properties</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: ReadEntityAdmin</li>
+				<li>Parameters: Table Name</li>
+				<li>Response codes:</li>
+				<ul>
+				<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
+				<li>status_codes::NotFound (404): Table does not exist</li>
+				<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li></ul></ul>
+			</div>
+			<p>
+			This command requires a passed in JSON object in order for the program to know what properties to look for. We store this in the variable 'stored_message' as an unordered_map&lt;string,string&gt;.</br>
+			</p>
+			<pre class="brush: cpp;">
+			unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command </pre>
+			<p>
+			For each entity the iterator is at, the function begins by retrieving all the properties of the current entity, and iterating through all the property names, incrementing the variable 'equal' given that the current property matched one of the properties in the passed in JSON Body.</br>
+			<pre class="brush: cpp;">
+			const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
+			for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
+			{
+				unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
+				if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
+					equal++;
+				}
+			}
+			</pre>
+			Once all of the properties of the current entity have been iterated through, we check the value of equal against the size of the JSON Body, which is determined by the number of properties stored within it. Given that they're equivalent, then the current entity contains all the passed in properties, thus it needs to be pushed on to the JSON Array and returned.
+			<pre class="brush: cpp;">
+			if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
+				cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
 				keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
 				keys = get_properties(it->properties(), keys);
-				key_vec.push_back(value::object(keys)); // A partition is found, so push it on to the vector of JSON values
+				key_vec.push_back(value::object(keys));
 			}
-			++it;
-		}
-		if( keys.empty() ){ // The requested partition is not a part of the table
-			message.reply(status_codes::NotFound);
-			return;
-		}
-		message.reply(status_codes::OK, value::array(key_vec));
-		return;
-	}</pre>
-	<div style="margin-left: 1em;">
-	<b>Get All Entities Containing All Specified Properties</b>
-	<ul>
-		<li>HTTP method: GET</li>
-		<li>Operation: ReadEntityAdmin</li>
-		<li>Parameters: Table Name</li>
-		<li>Response codes:</li>
-		<ul>
-		<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
-		<li>status_codes::NotFound (404): Table does not exist</li>
-		<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li></ul></ul>
-	</div>
-	<p>
-	This command requires a passed in JSON object in order for the program to know what properties to look for. We store this in the variable 'stored_message' as an unordered_map&lt;string,string&gt;.</br>
-	</p>
-	<pre class="brush: cpp;">
-	unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command </pre>
-	<p>
-	For each entity the iterator is at, the function begins by retrieving all the properties of the current entity, and iterating through all the property names, incrementing the variable 'equal' given that the current property matched one of the properties in the passed in JSON Body.</br>
-	<pre class="brush: cpp;">
-	const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
-	for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
-	{
-		unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
-		if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
-			equal++;
-		}
-	}
-	</pre>
-	Once all of the properties of the current entity have been iterated through, we check the value of equal against the size of the JSON Body, which is determined by the number of properties stored within it. Given that they're equivalent, then the current entity contains all the passed in properties, thus it needs to be pushed on to the JSON Array and returned.
-	<pre class="brush: cpp;">
-	if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
-		cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
-		keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
-		keys = get_properties(it->properties(), keys);
-		key_vec.push_back(value::object(keys));
-	}
-	</pre>
-	This process is repeated until all the entities in the table have been iterated through, and all matching entities are passed back in the JSON Array. We get the resulting body of code.
-	</p>
-	<pre class="brush: cpp;">
-	if(paths[0] == read_entity_admin){
-		unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command
-		if( stored_message.size() > 0 ){
-			// Initialize all required variables
-			table_query query {};
-			table_query_iterator end;
-			table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
-			table_entity entity; // The JSON array to be passed back when the iterator has gone through all entities
-			prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
-			vector&lt;value&gt; key_vec;
-			int equal {0};
+			</pre>
+			This process is repeated until all the entities in the table have been iterated through, and all matching entities are passed back in the JSON Array. We get the resulting body of code.
+			</p>
+			<pre class="brush: cpp;">
+			if(paths[0] == read_entity_admin){
+				unordered_map&lt;string,string&gt; stored_message = get_json_body(message); // Retrieves the JSON Body from the cURL command
+				if( stored_message.size() > 0 ){
+					// Initialize all required variables
+					table_query query {};
+					table_query_iterator end;
+					table_query_iterator it = table.execute_query(query); // Since the variable 'query' is empty, this sets the table_query_iterator, it, to the beginning
+					table_entity entity; // The JSON array to be passed back when the iterator has gone through all entities
+					prop_vals_t keys; // Note that prop_vals_t is the class vector&lt;pair&lt;string,value&gt;&gt;;
+					vector&lt;value&gt; key_vec;
+					int equal {0};
 
-			while(it != end){
-				equal = 0;
-				const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
-				for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
-				{
-					unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
-					if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
-						equal++;
+					while(it != end){
+						equal = 0;
+						const table_entity::properties_type& properties = it->properties(); // Obtain all properties of the current entity
+						for (auto prop_it = properties.begin(); prop_it != properties.end(); ++prop_it) // Cycles through the properties of the current entity
+						{
+							unordered_map&lt;string,string&gt;::const_iterator got = stored_message.find(prop_it->first);
+							if( got != stored_message.end() ){ // A property from the JSON body was found in the entity
+								equal++;
+							}
+						}
+						if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
+							cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
+							keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
+							keys = get_properties(it->properties(), keys);
+							key_vec.push_back(value::object(keys));
+						}
+						++it;
 					}
+					message.reply( status_codes::OK, value::array(key_vec) );
+					return;
 				}
-				if( equal == stored_message.size() ){ // All properties from the JSON body were found in the entity
-					cout << "Partition: " << it->partition_key() << " / Row: " << it->row_key() << endl;
-					keys = { make_pair("Partition",value::string(it->partition_key())), make_pair("Row",value::string(it->row_key())) };
-					keys = get_properties(it->properties(), keys);
-					key_vec.push_back(value::object(keys));
-				}
-				++it;
-			}
-			message.reply( status_codes::OK, value::array(key_vec) );
-			return;
-		}
-	}</pre>
-	<p>
-	While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools while implementing these commands according to a set of specifications.
-	</p>
-	<h2>2. Authentication: Secure Record Access</h2>
-	The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
-	
-	<h2>3. High-Level Interface: Session Layer</h2>
-	</br>
+			}</pre>
+			<p>
+				While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools while implementing these commands according to a set of specifications.
+			</p>
+		</div>
+
+		<div class="section" id="authentication-layer">
+			<h2>2. Authentication: Secure Record Access</h2>
+			The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
+		</div>
+		<div class="section" id="session-layer">
+			<h2>3. High-Level Interface: Session Layer</h2>
+		</div>
+		</br>
+	</div>
 </body>
 </html>
