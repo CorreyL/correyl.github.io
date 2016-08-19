@@ -25,8 +25,8 @@
 		Given a valid URL, wget will download the specified file to the current directory.</br>
 		
 		Using this, I needed to figure out the URL prefix used for each episode.</br></br>
-		Episodes 1-99 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_0[0-9][1-9]</code>, where <code>{0[0-9][1-9]}</code> is the Regular Expression for episode numbers between 001-099.</br></br>
-		Episodes 100-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{0-9]{3}.m4a</code> where <code>{[0-9]{3}}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
+		Episodes 1-99 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_0[0-9][1-9]</code>, where <code>0[0-9][1-9]</code> is the Regular Expression for episode numbers between 001-099.</br></br>
+		Episodes 100-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{0-9]{3}.m4a</code> where <code>[0-9]{3}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
 		
 		Adding a small wrinkle to this is episodes 1-44 are in the .mp3 file format, whereas episodes 45-310 are in the .m4a file format, hence the need for the first if block</br>
 		<pre class="brush: bash;">
