@@ -20,8 +20,10 @@
 		</style>
 		<title>Digital Portfolio of Correy Lim</title>
 	</head>
-	<h3>CMPT 276: Introduction to Software Engineering (January 2016 - April 2016)</h3>
 	<body>
+	<h3>CMPT 276: Introduction to Software Engineering (January 2016 - April 2016)</h3>
+	<h2>Table of Contents</h2>
+	<h2>Preface</h2>
 	<p>
 		In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
 	</p>
@@ -80,7 +82,7 @@
 		Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
 		The back-end was set up as a tiered service as 4 different servers:</br>
 		<center><img src="cmpt276architecture.jpg"/></br></center>
-		<b>1. Low-Level Interface: Database Layer</b></br>
+		<h2>1. Low-Level Interface: Database Layer</h2>
 		The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/" target="_parent"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg" target="_parent"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/" target="_parent"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
 		
 		Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
@@ -263,10 +265,10 @@
 	<p>
 	While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools while implementing these commands according to a set of specifications.
 	</p>
-	<b>2. Authentication: Secure Record Access</b></br>
+	<h2>2. Authentication: Secure Record Access</h2>
 	The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 	
-	<b>3. High-Level Interface: Session Layer</b></br>
+	<h2>3. High-Level Interface: Session Layer</h2>
 	</br>
 </body>
 </html>
