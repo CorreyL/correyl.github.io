@@ -110,19 +110,19 @@
 					<li>PUT</li>
 					<li>DELETE</li>
 				</ul>
-				The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
+				The URI specifies the server being called, the command, and any corresponding arguments required by the command. The simplest command to demonstrate this is 'CreateTableAdmin', the specifications of which are as follows:</br>
 			</p>
-			<div style="margin-left: 1em;">
-			<b>Create A Table</b>
-			<ul><li>HTTP method: POST</li>
-			<li>Operation: CreateTableAdmin</li>
-			<li>Parameters: (Table Name)</li>
-			<li>Response codes:</li>
-			<ul><li>status_codes::BadRequest (400): Missing table name</li>
-			<li>status_codes::Created (201): Table created</li>
-			<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
-			This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br></br>
-			</div>
+			<div class ="tableofcontents" style="margin-left: 1em;"> <!-- Change the class so that it doesn't go across the width of the page. -->
+				<b>Create A Table</b>
+				<ul><li>HTTP method: POST</li>
+				<li>Operation: CreateTableAdmin</li>
+				<li>Parameters: (Table Name)</li>
+				<li>Response codes:</li>
+				<ul><li>status_codes::BadRequest (400): Missing table name</li>
+				<li>status_codes::Created (201): Table created</li>
+				<li>status_codes::Accepted (202): Table already existed</li></ul></ul>
+				This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br>
+			</div></br>
 			Which is performed by the URI:</br></br>
 			<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
 			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
@@ -165,16 +165,16 @@
 			
 			From the list above, we were tasked with implementing two commands in the Database Layer:</a></br></br>
 			
-			<div style="margin-left: 1em;">
-			<b>Get All Entities From A Specific Partition</b>
-			<ul><li>HTTP method: GET</li>
-			<li>Operation: (None)</li>
-			<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
-			<li>Response codes:</li>
-			<ul><li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
-			<li>status_codes::NotFound (404): Table does not exist</li>
-			<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
-			</div>
+			<div class="tableofcontents" style="margin-left: 1em;">
+				<b>Get All Entities From A Specific Partition</b>
+				<ul><li>HTTP method: GET</li>
+				<li>Operation: (None)</li>
+				<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+				<li>Response codes:</li>
+				<ul><li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+				<li>status_codes::NotFound (404): Table does not exist</li>
+				<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li></ul></ul>
+				</div>
 			<p>
 			The heart of this command is the if-block on line 10, wherein if the given partition matches an entity's partition in the table, the entity's Row and associated JSON Object is made into a pair and pushed on to the JSON array.</br></br>
 			
@@ -205,7 +205,7 @@
 				message.reply(status_codes::OK, value::array(key_vec));
 				return;
 			}</pre>
-			<div style="margin-left: 1em;">
+			<div class="tableofcontents" style="margin-left: 1em;">
 			<b>Get All Entities Containing All Specified Properties</b>
 			<ul>
 				<li>HTTP method: GET</li>
@@ -213,9 +213,11 @@
 				<li>Parameters: Table Name</li>
 				<li>Response codes:</li>
 				<ul>
-				<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
-				<li>status_codes::NotFound (404): Table does not exist</li>
-				<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li></ul></ul>
+					<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table found and entities with the selected properties are returned in a JSON array. If there are no entries with the specified properties, return an empty JSON array.</li>
+					</ul>
+			</ul>
 			</div>
 			<p>
 			This command requires a passed in JSON object in order for the program to know what properties to look for. We store this in the variable 'stored_message' as an unordered_map&lt;string,string&gt;.</br>
