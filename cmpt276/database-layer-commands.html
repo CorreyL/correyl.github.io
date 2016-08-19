@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../style.css"/>
+	</head>
+	<body>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Create A Table</b>
+			<ul><li>HTTP method: POST</li>
+			<li>Operation: CreateTableAdmin</li>
+			<li>Parameters: Table Name</li>
+			<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name</li>
+					<li>status_codes::Created (201): Table created</li>
+					<li>status_codes::Accepted (202): Table already existed</li>
+				</ul>
+			</ul>
+			This operation is idempotent-"creating" a table that has already been created returns an HTTP 202 Accepted status.</br>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Delete A Table</b>
+			<ul>
+				<li>HTTP method: DELETE</li>
+				<li>Operation: DeleteTable</li>
+				<li>Parameters: Table Name</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table deleted</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Create/Update Entity</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: UpdateEntity</li>
+				<li>Parameters: Table Name, Partition Name, Row Name</li>
+				<li>Body: JSON object including any property/value pairs. All values must be JSON strings-enclosed in ".</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing row name</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Entity added/updated</li>
+				</ul>
+			</ul>
+			This operation merges the specified properties with any properties already stored for this partition/row pair already in the database.
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Delete Entity</b>
+			<ul>
+				<li>HTTP method: DELETE</li>
+				<li>Operation: DeleteEntity</li>
+				<li>Parameters: Table Name, Partition Name, Row Name</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing row name</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Entity deleted</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Get All Entries In A Table</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: (None)</li>
+				<li>Parameters: Table Name</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): No parameters specified</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table found, entities returned as JSON array</li>
+				</ul>
+			</ul>
+			<b>Result:</b> If the table exists, the response body is a JSON array of objects. Each object corresponds to an entity in this table. The entity's partition is returned as though it were a property named "Partition" and its row is returned as though it were a property named "Row". The actual properties of the entity are returned as properties of the JSON object.</br></br>
+			<b>Note:</b> The above design poorly handles the case where an entity has a property "Partition" or "Row". The simplest solution is to adopt the convention of never assigning an entity those properties.
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Get Specific Entry In a Table</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: (None)</li>
+				<li>Parameters: Table Name, Partition Name, Row Name</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name, partition name, or row name</li>
+					<li>status_codes::NotFound (404): Table does not exist or table exists but no entity with that partition/row combination exists</li>
+					<li>status_codes::OK (200): Table found, entities returned as JSON object</li>
+				</ul>
+			</ul>
+			<b>Result:</b> If the table exists and the entity exists within that table, the response body is a single JSON object. The object has a property for every property stored for the entity in the database. The values of the partition and row are not included (because the caller had to know them already in order to retrieve the entity).
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+			<b>Get All Entities From A Specific Partition</b>
+			<ul>
+			<li>HTTP method: GET</li>
+			<li>Operation: (None)</li>
+			<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+			<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+					<li>status_codes::NotFound (404): Table does not exist</li>
+					<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="tableofcontents" style="margin-left: 1em;">
+				<b>Get All Entities From A Specific Partition</b>
+				<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: (None)</li>
+				<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
+				<li>Response codes:</li>
+					<ul>
+						<li>status_codes::BadRequest (400): Missing table name, missing partition name, or missing * for row</li>
+						<li>status_codes::NotFound (404): Table does not exist</li>
+						<li>status_codes::OK (200): Table found and entities in the selected partition are returned in a JSON array. If there are no entries in the specified partition, return an empty JSON array.</li>
+					</ul>
+				</ul>
+			</div>
+	</body>
+</html>

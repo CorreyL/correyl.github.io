@@ -10,12 +10,17 @@ div.tableofcontents{
 		border-color: #f0f5f5;
 		border-width: 0.5px;
 		padding: 3px 0 3px 30px;
+		overflow:hidden;
 }
 div.tableofcontents a{
 	color: #CA7900;
 }
 div.tableofcontents li{
 	padding-bottom: 0.3em;
+}
+div.tableofcontents ul{
+	margin-top: 0px;
+  margin-bottom: 0px;
 }
 div.document h2{
     background-color: #f2f2f2;
