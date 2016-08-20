@@ -998,6 +998,78 @@
 					return;
 				}</pre>
 			<h1 id="user-command4">Remove Friend</h1>
+			<div class="commandspec" style="margin-left: 1em;">
+			<b>Unfriend</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: UnFriend</li>
+				<li>Parameters: Userid, Friend Country, and Full Friend Name. See Add Friend for details of friend specification.</li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The user's list of friends does not include the specified friend. Note that if this person was not already listed as a friend, the response is still OK</li>
+				</ul>
+			</ul>
+			</div></br>
+			We begin in the same way we did with Add Friend, ensuring the user is logged in, and retrieving the current list of friends:
+			<pre class="brush: cpp;">
+			if( active_users.find(paths[1]) == active_users.end() ){
+				message.reply(status_codes::Forbidden);
+				return;
+			}
+
+			pair<status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};
+			
+			string current_friends;
+			string check_for_no_friends;
+			string passed_in {paths[2] + ";" + paths[3]};
+			for (const auto& v : check_friends.second.as_object()){
+				if(v.first == "Friends") check_for_no_friends = v.second.as_string();
+			}
+			if( (check_friends.second.size() == 0) || (check_for_no_friends == "") ){ // User has no friends, thus we can return without altering the friend list
+				message.reply(status_codes::OK);
+				return;
+			}
+			else{
+				for (const auto& v : check_friends.second.as_object()){
+					if( v.first == "Friends") current_friends = v.second.as_string();
+				}
+			}</pre>
+			Once we've obtained the friend list, there are 4 possible combinations in which this friend can be in a friend list. Let * indicate the friend looking to be removed, and # be other friends in the friend list:
+			<ol>
+				<li>{*|#|...}: This friend is at the head of the friend list</li>
+				<li>{#|*|#|...}: This friend is somewhere in the middle of the friend list</li>
+				<li>{...|#|*}: This friend is at the end of the friend list</li>
+				<li>{*}: This is the only friend in the user's friend list</li>
+			</ol>
+			Thus, we build an if/else-if block that handles each of these cases:
+			<pre class="brush: cpp;">
+			if( current_friends.find(passed_in+"|") != string::npos ){ // This friend is the first entry in the friends list
+				current_friends.erase( current_friends.find(passed_in), passed_in.length()+1 );
+			}
+			else if( current_friends.find("|"+passed_in+"|") != string::npos ){ // This friend is a middle entry in the friends list
+				current_friends.erase( current_friends.find(passed_in), passed_in.length()+1 );
+			}
+			else if (current_friends.find("|"+passed_in) != string::npos ){ // This friend is the last entry in the friends list
+				current_friends.erase( current_friends.find(passed_in)-1, passed_in.length()+1 );
+			}
+			else if(current_friends.find(passed_in) != string::npos){ // This user only has one friend, and that friend is the friend being looked for
+				current_friends.erase( current_friends.find(passed_in), passed_in.length() );
+			}</pre>
+			Once that has been taken care of, as done with Add Friend, we build the new friends list as a JSON Object, and store it in the property "Friends" of the current user:
+			<pre class="brush: cpp;">
+			value props { build_json_object(vector<pair<string,string>> { make_pair(string("Friends"),string(current_friends))})};
+			int unfriend_result = put_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2], props);
+			
+			if(unfriend_result == status_codes::OK){
+				message.reply(status_codes::OK);
+				return;
+			}
+			else{
+				message.reply(unfriend_result);
+				return;
+			}</pre>
 			<h1 id="user-command5">Update Status</h1>
 			<h1 id="user-command6">Get A User's Friend List</h1>
 		</div>
