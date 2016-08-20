@@ -61,6 +61,11 @@
 						<li><a href="#user-introduction">Introduction</a></li>
 						<li><a href="#user-commands">List of All Commands</a></li>
 						<li><a href="#user-command1">Command: Sign On</a></li>
+						<li><a href="#user-command2">Command: Sign Off</a></li>
+						<li><a href="#user-command3">Command: Add Friend</a></li>
+						<li><a href="#user-command4">Command: Remove Friend</a></li>
+						<li><a href="#user-command5">Command: Update Status</a></li>
+						<li><a href="#user-command6">Command: Get A User's Friend List</a></li>
 						</ul>
 				</table>
 			</div>
@@ -874,8 +879,34 @@
 					message.reply(status_codes::NotFound);
 					return;
 				}</pre>
+				
+			<h1 id="user-command2">Sign Off</h1>
+			<div class="commandspec" style="margin-left: 1em;">
+			<b>Sign Off</b>
+			<ul>
+				<li>HTTP method: POST</li>
+				<li>Operation: SignOff</li>
+				<li>Parameters: Userid</li>
+				<li>Body: None </li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::NotFound (404): The userid did not have an active session</li>
+					<li>status_codes::OK (200): The userid had an active session and it was ended</li>
+				</ul>
+			</ul>
+			</div></br>
+			Very simply, we check whether or not the passed in user is in the unordered map of active_users or not. If they are, remove them from active_users.
+			<pre class="brush: cpp;">
+			if( active_users.find(paths[1]) != active_users.end() ){
+				active_users.erase(paths[1]);
+				message.reply(status_codes::OK);
+				return;
+			}</pre>
+			<h1 id="user-command3">Add Friend</h1>
+			<h1 id="user-command4">Remove Friend</h1>
+			<h1 id="user-command5">Update Status</h1>
+			<h1 id="user-command6">Get A User's Friend List</h1>
 		</div>
-		</br>
 	</div>
 </body>
 </html>
