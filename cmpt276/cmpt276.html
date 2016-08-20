@@ -343,8 +343,8 @@
 			</div></br>
 			There are only two commands that exist for the Authentication Server:
 			<ol>
-			<li><a href="">Get A Read Token</a></li>
-			<li><a href="">Get An Update Toke</a></li>
+				<li><a href="#auth-command1"><b>Get A Read Token</b></a></li>
+				<li><a href="#auth-command2"><b>Get An Update Token</b></a></li>
 			</ol>
 			<h1 id="auth-command1">Get A Read Token</h1>
 			<div class="commandspec" style="margin-left: 1em;">
@@ -361,7 +361,7 @@
 					<li>status_codes::OK (200): Token returned. The response body will be a JSON object containing the single property token, whose value is a string representing the token. Azure tokens are about 100 characters long</li>
 				</ul>
 			</ul>
-			Note: For the purposes of this project, we the passwords were sent over http. In a real system, calls to the authentication server would be done via https rather than http.
+			Note: For the purposes of this project, the passwords were sent over http. In a real system, calls to the authentication server would be done via https rather than http.
 			</div></br>
 			This command returns the first of two types of tokens that AuthServer returns. This token allows the user and entity associated with the token to read the data from the entity.</br></br>
 			Inside of the while loop that iterates through all entities of DataTable, we first check for the Partition/Row combination "Userid"/(The passed in username):
@@ -485,7 +485,7 @@
 			<h1 id="auth-command2">Get An Update Token</h1>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>Get An Update Token</b>
-				<p>This operation has the same specification as "Get A Read Token", except for the following:</p>
+				<p>This operation has the same specification as <a href="#auth-command1"><b>"Get A Read Token"</b></a>, except for the following:</p>
 				<ul>
 					<li>Operation: GetUpdateToken</li>
 					<li>Response codes:</li>
@@ -494,6 +494,7 @@
 					</ul>
 				</ul>
 			</div></br>
+			This command returns the other type of tokens that AuthServer returns. This token allows the user and entity associated with the token to read and update the data from the entity.</br></br>
 			The implementation is much the same as Get A Read Token, the only change is what type of token is retrieved, wherein the call to do_get_token has its third argument changed to </br></br><code>table_shared_access_policy::permissions::read | table_shared_access_policy::permissions::update</code></br></br>
 			Which results in:
 			<pre class="brush: cpp;">
