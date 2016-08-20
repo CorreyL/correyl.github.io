@@ -414,10 +414,10 @@
 	{"Genre":"Alternative_R&B,"Latest_Song":"Gemini_Feed","Partition":"Musician","Row":"Banks"},
 	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
 	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
-		An example of using 'Get All Entities Containing All Specified Properties:
+		An example of using 'Get All Entities Containing All Specified Properties:</br>
+		Here, I specify that I only want entities with the property "Genre".
 		<pre>
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get $B/ReadEntityAdmin/Artists -d '{"Genre":"*"}' -H "Conten
-	t-Type: application/json"
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get $B/ReadEntityAdmin/Artists -d '{"Genre":"*"}' -H "Content-Type: application/json"
 	HTTP/1.1 200 OK
 	Content-Length: 269
 	Content-Type: application/json
