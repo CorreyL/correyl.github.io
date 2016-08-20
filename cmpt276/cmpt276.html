@@ -40,6 +40,10 @@
 							<li><a href="#database-command3">Command: Add the Specified Property (Name/Value Pair) To All Entities</a></li>
 							<li><a href="#database-command4">Command: Update the Specified Property In All Entities</a></li>
 							<li><a href="#database-example2">Example Use of BasicServer</a></li>
+								<ul>
+									<li><a href="#database-specific-example1">Get All Entities From A Specific Partition</a></li>
+									<li><a href="#database-specific-example2">Get All Entities Containing All Specified Properties</a></li>
+								</ul>
 							<li><a href="#database-conclusion">Conclusion</a></li>
 							<li><a href="#database-source">Source Code</a></li>
 						</ul>
@@ -196,7 +200,7 @@
 				<b>Get All Entities From A Specific Partition</b>
 				<ul>
 				<li>HTTP method: GET</li>
-				<li>Operation: (None)</li>
+				<li>Operation: ReadEntityAdmin</li>
 				<li>Parameters: Table Name, Partition Name, Row Name specified as '*'</li>
 				<li>Response codes:</li>
 					<ul>
@@ -316,7 +320,7 @@
 				}
 			}</pre>
 			<h1 id="database-example2">Example Use of BasicServer</h1>
-			Here is an example of entering the entities from the example table
+			Here is an example of entering the entities from the example table shown in the Preface
 			<center><table style="width:70%" border="1">
 				<tr>
 					<th>Partition</th>
@@ -375,9 +379,7 @@
 		</pre>
 		Of course, typing in commands this long gets annoying quite quickly, so I opt to use Bash Scripting to ease this process of adding entities to a table:</br></br>
 		First I set the variables by running
-		<pre>
-			source setvars.sh
-		</pre>
+		<pre>	source setvars.sh</pre>
 		Where setvars.sh is:
 		<pre class="brush: bash;">
 			B='http://localhost:34568'
@@ -414,7 +416,17 @@
 	{"Genre":"Alternative_R&B,"Latest_Song":"Gemini_Feed","Partition":"Musician","Row":"Banks"},
 	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
 	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
-		An example of using 'Get All Entities Containing All Specified Properties:</br>
+		<h1 id="database-specific-example1">An example of using 'Get All Entities From A Specific Partition':</h1>
+		Here, I specify that I only want entities from the Partition 'Actor'
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/website/correyl.github.io$ curl -i -X get $B/ReadEntityAdmin/Artists/Actor/*
+	HTTP/1.1 200 OK
+	Content-Length: 135
+	Content-Type: application/json
+
+	[{"Partition":"Actor","Row":"Krysten_Ritter","TV_Show":"Jessica Jones"},
+	{"Partition":"Actor","Row":"Rami_Malek","TV_Show":"Mr. Robot"}]</pre>
+		<h1 id="database-specific-example2">An example of using 'Get All Entities Containing All Specified Properties':</h1>
 		Here, I specify that I only want entities with the property "Genre".
 		<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get $B/ReadEntityAdmin/Artists -d '{"Genre":"*"}' -H "Content-Type: application/json"
