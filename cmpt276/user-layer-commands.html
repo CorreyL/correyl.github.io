@@ -6,7 +6,7 @@
 	</head>
 	<body>
 		<div class="commandspec" style="margin-left: 1em;">
-			<b></b>
+			<b>Sign On</b>
 			<ul>
 				<li>HTTP method: POST</li>
 				<li>Operation: SignOn</li>
@@ -14,27 +14,84 @@
 				<li>Body: JSON object with the single property Password whose value is a password string. The requirements for the password and the form of the JSON body are exactly as specified for <a href="">GetReadToken</a></li>
 				<li>Response codes:</li>
 				<ul>
-					<li>status_codes::NotFound (404): Either the auth server responded NotFound or the auth server responded OKor no record exists in DataTable for this user.</br>
+					<li>status_codes::NotFound (404): Either the auth server responded NotFound or the auth server responded OK or no record exists in DataTable for this user.</br></br>
 
-					The auth server makes no guarantees that there is an actual entity in DataTable associated with this user. Therefore, after succesfully receiving a token from the auth server (which guarantees that the userid and password are in AuthTable), the user server also attempts to read the entity in DataTable associated with this userid. If no such record exists, the user server returns status_codes::NotFound to a sign on request and does not record the user as signed in.</li>
-					<li>status_codes::OK (200): The auth server returned a token and the expected record exists in DataTable. The user is recorded as signed in.</br>
-					If the user is already signed in and attempts to sign in again with the same userid and password, the user server returns OK and continues their existing session.</br>
+					The auth server makes no guarantees that there is an actual entity in DataTable associated with this user. Therefore, after succesfully receiving a token from the auth server (which guarantees that the userid and password are in AuthTable), the user server also attempts to read the entity in DataTable associated with this userid. If no such record exists, the user server returns status_codes::NotFound to a sign on request and does not record the user as signed in.</li></br>
+					<li>status_codes::OK (200): The auth server returned a token and the expected record exists in DataTable. The user is recorded as signed in.</br></br>
+					If the user is already signed in and attempts to sign in again with the same userid and password, the user server returns OK and continues their existing session.</br></br>
 					If the user is already signed in and makes an unsuccessful attempt to sign in (for example, the second attempt includes the wrong password), the user server returns NotFound but continues their existing session.</li>
 				</ul>
 			</ul>
-		</div>
+		</div></br>
 		<div class="commandspec" style="margin-left: 1em;">
-			<b></b>
+			<b>Sign Off</b>
 			<ul>
-				<li>HTTP method: </li>
-				<li>Operation: </li>
-				<li>Parameters: </li>
-				<li>Body: </li>
+				<li>HTTP method: POST</li>
+				<li>Operation: SignOff</li>
+				<li>Parameters: Userid</li>
+				<li>Body: None </li>
 				<li>Response codes:</li>
 				<ul>
-					<li>status_codes::BadRequest (400): </li>
-					<li>status_codes::NotFound (404): t</li>
-					<li>status_codes::OK (200): .</li>
+					<li>status_codes::NotFound (404): The userid did not have an active session</li>
+					<li>status_codes::OK (200): The userid had an active session and it was ended</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b>Add Friend</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: AddFriend</li>
+				<li>Parameters: Userid, friend country, and full friend name. The friend’s country and full name is required because the user might not know the userid of their friend. Thus a sample request for userid ted adding Joe Peters from Canada as a friend might look like:</br></br>
+				<code>AddFriend/ted/Canada/Peters,Joe</code></br></br></li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The user's list of friends now includes the new friend. Note that if this person was already listed as a friend, they should not be added a second time. The user server does not validate whether the friend actually corresponds to an entity in DataTable.</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b>Unfriend</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: UnFriend</li>
+				<li>Parameters: Userid, Friend Country, and Full Friend Name. See Add Friend for details of friend specification.</li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The user's list of friends does not include the specified friend. Note that if this person was not already listed as a friend, the response is still OK</li>
+				</ul>
+			</ul>
+		</div></br>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b>Update Status</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: UpdateStatus</li>
+				<li>Parameters: Userid and Status. See the <a href="">user properties</a> section for the structure of the status</li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::ServiceUnavailable(503): The push server was not running. The user's status has been updated but the change in status was not sent to any of their friends.</li>
+					<li>status_codes::OK (200): The user's Status property has been set to the status string and every friend in the user's friend list has had this status added to their Updates property.</li>
+				</ul>
+			</ul>
+			</div></br>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b>Get A User's Friend List</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: ReadFriendList</li>
+				<li>Parameters: Userid</li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The response body is a JSON object with the single property Friends and an associated value string giving the friend list. The friend list string uses the same representation stored in the database</li>
 				</ul>
 			</ul>
 		</div>
@@ -50,8 +107,7 @@
 				<li>Body: </li>
 				<li>Response codes:</li>
 				<ul>
-					<li>status_codes::BadRequest (400): </li>
-					<li>status_codes::NotFound (404): t</li>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
 					<li>status_codes::OK (200): .</li>
 				</ul>
 			</ul>

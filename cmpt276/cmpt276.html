@@ -59,8 +59,8 @@
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
 						<ul>
 						<li><a href="#user-introduction">Introduction</a></li>
+						<li><a href="#user-commands">List of All Commands</a></li>
 						<li><a href="#user-command1">Command: Sign On</a></li>
-						<li><a href=""></a></li>
 						</ul>
 				</table>
 			</div>
@@ -198,7 +198,7 @@
 					message.reply(status_codes::BadRequest); // No table name given (RC: 400)
 				}
 			}</pre>
-			<div id="database-commands">The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank"><b>here</b></a></div></br>
+			The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank" id="database-commands"><b>here</b></a>.</br></br>
 			From the list above, we were tasked with implementing two commands in the Database Layer:
 			<h1 id="database-command1">Get All Entities From A Specific Partition</h1>
 			<div class="commandspec" style="margin-left: 1em;">
@@ -721,9 +721,10 @@
 				pair&lt;status_code,value&rt; do_request (const method& http_method, 
 													   const string& uri_string, 
 													   const value& req_body)</pre>
-				A list of all the commands in UserServer can be found <a href=""><b>here</b></a>.
-				As with any social network, a client is first required to sign on before they are able to use any of the services.
+				A list of all the commands in UserServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
 			</div>
+			<h1 id="user-command1">Sign On</h1>
+			As with any social network, a client is first required to sign on before they are able to use any of the services.
 		</div>
 		</br>
 	</div>
