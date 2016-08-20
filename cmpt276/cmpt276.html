@@ -6,6 +6,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
 		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushCpp.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushBash.js"></script>
 		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
 		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
 		<script type="text/javascript">SyntaxHighlighter.all();</script>
@@ -48,6 +49,8 @@
 						<li><a href="#auth-server">Authentication Server</a></li>
 						<li><a href="#auth-command1">Command: Get A Read Token</a></li>
 						<li><a href="#auth-command2">Command: Get An Update Token</a></li>
+						<li><a href="#auth-example1">Example Use of AuthServer</a></li>
+						<li><a href="#auth-conclusion">Conclusion</a></li>
 						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
 				</table>
@@ -152,7 +155,7 @@
 			<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
 			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
 			The Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
-			<code>$ curl -i -X post http://localhost:34568/CreateTable/MyTable</code></br></br>
+			<code>$ curl -i -X post http://localhost:34568/CreateTableAdmin/MyTable</code></br></br>
 			The following is the C++ code found in BasicServer.cpp that handles this call.
 			<!-- C++ Code for CreateTableAdmin -->
 			<pre class="brush: cpp;">
@@ -240,6 +243,7 @@
 				<li>HTTP method: GET</li>
 				<li>Operation: ReadEntityAdmin</li>
 				<li>Parameters: Table Name</li>
+				<li>Body: Body: JSON object whose names denote properties and whose values are all the string "*". For example, the message body {"born": "*", "art": "*"} would get all entities who have both the properties born and art, with any values. The entity could have other properties as well-so long as an entity's properties include the specified properties, that entity would be returned as the result.</li>
 				<li>Response codes:</li>
 				<ul>
 					<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
@@ -311,10 +315,121 @@
 					return;
 				}
 			}</pre>
-			<h1 id="database-conclusion">Conclusion</h1>
-			<p>
-				While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools by understanding the commands already implemented, then implementing new commands according to a set of specifications.
-			</p>
+			<h1 id="database-example2">Example Use of BasicServer</h1>
+			Here is an example of entering the entities from the example table
+			<center><table style="width:70%" border="1">
+				<tr>
+					<th>Partition</th>
+					<th>Row</th> 
+					<th>JSON Object</th>
+				</tr>
+				<tr>
+					<td>Musician</td>
+					<td><a href="https://en.wikipedia.org/wiki/Tegan_and_Sara" target="_parent">Tegan Quin</a></td> 
+					<td>Genre: Indie Pop</br>
+					Band: Tegan & Sara
+					</td>
+				</tr>
+				<tr>
+					<td>Musician</td>
+					<td><a href="https://en.wikipedia.org/wiki/Banks_(singer)" target="_parent">Banks</a></td> 
+					<td>Genre: Alternative R&B</br>
+					Latest Song: Gemini Feed
+					</td>
+				</tr>
+				<tr>
+					<td>Musician</td>
+					<td><a href="https://en.wikipedia.org/wiki/Shura_(musician)" target="_parent">Shura</a></td> 
+					<td>Genre: Electropop</br>
+					Latest Album: Nothing's Real</td>
+				</tr>
+				<tr>
+					<td>Actor</td>
+					<td><a href="https://en.wikipedia.org/wiki/Rami_Malek" target="_parent">Rami Malek</a></td> 
+					<td>TV Show: <a href="https://en.wikipedia.org/wiki/Mr._Robot_(TV_series)" target="_parent">Mr. Robot</a></br>
+					</td>
+				</tr>
+				<tr>
+					<td>Actor</td>
+					<td><a href="https://en.wikipedia.org/wiki/Krysten_Ritter" target="_parent">Krysten Ritter</a></td> 
+					<td>TV Show: <a href="https://en.wikipedia.org/wiki/Jessica_Jones_(TV_series)" target="_parent">Jessica Jones</a></td>
+				</tr>
+		</table></br></center>
+		First, let's enter Partition: Musician, Row: Tegan Quin with the Properties: {Genre: Indie Pop, Band: Tegan & Sara}
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X post http://localhost:34568/CreateTableAdmin/Artists
+	HTTP/1.1 201 Created
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/Artists/Musicia
+	n/Tegan_Quin/ -d '{"Genre":"Indie Pop","Band":"Tegan&Sara"}' -H "Content-Type: application/json"
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34568/ReadEntityAdmin/Artists
+	HTTP/1.1 200 OK
+	Content-Length: 85
+	Content-Type: application/json
+
+	[{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]
+		</pre>
+		Of course, typing in commands this long gets annoying quite quickly, so I opt to use Bash Scripting to ease this process of adding entities to a table:</br></br>
+		First I set the variables by running
+		<pre>
+			source setvars.sh
+		</pre>
+		Where setvars.sh is:
+		<pre class="brush: bash;">
+			B='http://localhost:34568'
+			export B</pre>
+		Then ran the following script addentity.sh:
+		<pre class="brush: bash;">
+			#!/bin/bash
+			curl -i -X put $B/UpdateEntityAdmin/Artists/Musician/Banks/ -d '{"Genre":"Alternative_R&B","Latest_Song":"Gemini_Feed"}' -H "Content-Type: application/json";
+			curl -i -X put $B/UpdateEntityAdmin/Artists/Musician/Banks/ -d '{"Genre":"Electropop","Latest_Album":"Nothings_Real"}' -H "Content-Type: application/json";
+			curl -i -X put $B/UpdateEntityAdmin/Artists/Actor/Rami_Malek/ -d '{"TV_Show":"Mr. Robot"}' -H "Content-Type: application/json";
+			curl -i -X put $B/UpdateEntityAdmin/Artists/Actor/Krysten_Ritter/ -d '{"TV_Show":"Jessica Jones"}' -H "Content-Type: application/json";</pre>
+		And we get the following from the terminal:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./addentity.sh
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh Artists
+	HTTP/1.1 200 OK
+	Content-Length: 338
+	Content-Type: application/json
+
+	[{"Partition":"Actor","Row":"Krysten_Ritter","TV_Show":"Jessica Jones"},
+	{"Partition":"Actor","Row":"Rami_Malek","TV_Show":"Mr. Robot"},
+	{"Genre":"Alternative_R&B,"Latest_Song":"Gemini_Feed","Partition":"Musician","Row":"Banks"},
+	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
+	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
+		An example of using 'Get All Entities Containing All Specified Properties:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get $B/ReadEntityAdmin/Artists -d '{"Genre":"*"}' -H "Conten
+	t-Type: application/json"
+	HTTP/1.1 200 OK
+	Content-Length: 269
+	Content-Type: application/json
+
+	[{"Genre":"Alternative_R&B","Latest_Song":"Gemini_Feed","Partition":"Musician","Row":"Banks"},
+	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
+	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
+		Since the Musicians are the only ones with the property "Genre", they were the only entities returned.
+		<h1 id="database-conclusion">Conclusion</h1>
+		<p>
+			While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools by understanding the commands already implemented, then implementing new commands according to a set of specifications.
+		</p>
 		</div>
 		<div class="section" id="authentication-layer">
 			<h2>2. Authentication: Secure Record Access (AuthServer.cpp)</h2>
@@ -499,7 +614,7 @@
 			Which results in:
 			<pre class="brush: cpp;">
 				do_get_token (data_table, partition, row, table_shared_access_policy::permissions::read | table_shared_access_policy::permissions::update);</pre>
-			The source code for this command is as follows:
+			This can be found on Line 46 below. The source code for this command is as follows:
 			<pre class="brush: cpp;">
 				if( paths[0] == get_update_token_op ){
 					table_query query {};
@@ -572,6 +687,8 @@
 						++it;
 					}
 				}</pre>
+		<h1 id="auth-example1">Example Use of AuthServer</h1>
+		<h1 id="auth-conclusion">Conclusion</h1>
 		</div>
 		<div class="section" id="session-layer">
 			<h2>3. High-Level Interface: Session Layer</h2>

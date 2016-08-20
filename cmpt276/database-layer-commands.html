@@ -116,6 +116,7 @@
 				<li>HTTP method: GET</li>
 				<li>Operation: ReadEntityAdmin</li>
 				<li>Parameters: Table Name</li>
+				<li>Body: Body: JSON object whose names denote properties and whose values are all the string "*". For example, the message body {"born": "*", "art": "*"} would get all entities who have both the properties born and art, with any values. The entity could have other properties as well-so long as an entity's properties include the specified properties, that entity would be returned as the result.</li>
 				<li>Response codes:</li>
 				<ul>
 					<li>status_codes::BadRequest (400): Missing table name (if there is no JSON body, then a request with only a tablename is simply get all entities)</li>
