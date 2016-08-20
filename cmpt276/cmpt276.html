@@ -32,10 +32,13 @@
 					<li><a href="#database-layer">Low-Level Interface: Database Layer</a></li>
 						<ul>
 							<li><a href="#database-introduction">Introduction</a></li>
-							<li><a href="#database-example">Example of A Call to the Server</a></li>
+							<li><a href="#database-example1">Example of A Call to the Server</a></li>
 							<li><a href="#database-commands">List of All Commands</a></li>
 							<li><a href="#database-command1">Command: Get All Entities From A Specific Partition</a></li>
 							<li><a href="#database-command2">Command: Get All Entities Containing All Specified Properties</a></li>
+							<li><a href="#database-command3">Command: Add the Specified Property (Name/Value Pair) To All Entities</a></li>
+							<li><a href="#database-command4">Command: Update the Specified Property In All Entities</a></li>
+							<li><a href="#database-example2">Example Use of BasicServer</a></li>
 							<li><a href="#database-conclusion">Conclusion</a></li>
 							<li><a href="#database-source">Source Code</a></li>
 						</ul>
@@ -128,9 +131,9 @@
 				</ul>
 				The URI specifies the server being called, the command, and any corresponding arguments required by the command. 
 			</p>
-			<h1 id="database-example">Example of A Call to the Server</h1>
+			<h1 id="database-example1">Example of A Call to the Server</h1>
 			The simplest command to demonstrate a call to the server is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
-			<div class ="tableofcontents" style="margin-left: 1em;"> <!-- Change the class so that it doesn't go across the width of the page. -->
+			<div class ="commandspec" style="margin-left: 1em;"> <!-- Change the class so that it doesn't go across the width of the page. -->
 				<b>Create A Table</b>
 				<ul>
 				<li>HTTP method: POST</li>
@@ -186,7 +189,7 @@
 			<div id="database-commands">The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank"><b>here</b></a></div></br>
 			From the list above, we were tasked with implementing two commands in the Database Layer:
 			<h1 id="database-command1">Get All Entities From A Specific Partition</h1>
-			<div class="tableofcontents" style="margin-left: 1em;">
+			<div class="commandspec" style="margin-left: 1em;">
 				<b>Get All Entities From A Specific Partition</b>
 				<ul>
 				<li>HTTP method: GET</li>
@@ -231,7 +234,7 @@
 				return;
 			}</pre>
 			<h1 id="database-command2">Get All Entities Containing All Specified Properties</h1>
-			<div class="tableofcontents" id="database-command2" style="margin-left: 1em;">
+			<div class="commandspec" id="database-command2" style="margin-left: 1em;">
 			<b>Get All Entities Containing All Specified Properties</b>
 			<ul>
 				<li>HTTP method: GET</li>
@@ -320,7 +323,7 @@
 			This authorization server provides the authorization service. Clients submit a name and password. If the name and password match the values stored in the special table AuthTable, the authentication server asks Azure to generate an access token for that user. This token will allow the user to read or update exactly one entity in one table. Tokens are only good for 24 hours after they are issued.
 			<h1 id="auth-server">Authentication Server</h1>
 			In order to keep track of the registered username & password combinations, we created a separate Microsoft Azure table named AuthTable, which has the following attributes:</br></br>
-			<div class="tableofcontents" style="margin-left: 1em;">
+			<div class="commandspec" style="margin-left: 1em;">
 				<b>AuthTable</b>
 				<li>The table storing userid and password data. The table has only one partition, Userid, in which all entities are placed. The row key is the userid. For each user, the following three properties are stored:</li>
 				<ol>
@@ -331,7 +334,7 @@
 				Note that the authentication server only reads AuthTable. The user data in the table is created and modified by an administrator using the standard calls to BasicServer.</br></br>
 			</div>
 			<p>For the purposes of the project, AuthTable only ensures authenticated access to a single table, named DataTable, which has the following attributes:</p>
-			<div class="tableofcontents" style="margin-left: 1em;">
+			<div class="commandspec" style="margin-left: 1em;">
 				<b>DataTable</b>
 				<li>The table whose access is controlled by the authentication server. It has no specific structure beyond the standard Azure Table requirement that the key have two parts, a partition name and a row name.</li>
 				<li>Note that the authentication server does not actually read or write DataTable. It only uses DataTable to create the security tokens. The actual reading and updating of DataTable is done by BasicServer using the authenticated read and write operations.</li>
@@ -344,7 +347,7 @@
 			<li><a href="">Get An Update Toke</a></li>
 			</ol>
 			<h1 id="auth-command1">Get A Read Token</h1>
-			<div class="tableofcontents" style="margin-left: 1em;">
+			<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A Read Token</b>
 			<ul>
 				<li>HTTP method: GET</li>
@@ -361,7 +364,7 @@
 			Note: For the purposes of this project, we the passwords were sent over http. In a real system, calls to the authentication server would be done via https rather than http.
 			</div>
 			<h1 id="auth-command2">Get An Update Token</h1>
-			<div class="tableofcontents" style="margin-left: 1em;">
+			<div class="commandspec" style="margin-left: 1em;">
 				<b>Get An Update Token</b>
 				<p>This operation has the same specification as "Get A Read Token", except for the following:</p>
 				<ul>

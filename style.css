@@ -26,6 +26,14 @@ div.tableofcontents ol{
 	margin-top: 0px;
   margin-bottom: 0px;
 }
+div.commandspec{
+	background-color: #f8f8f8;
+	border-style: groove;
+	border-color: #f0f5f5;
+	border-width: 0.5px;
+	padding: 3px 0 3px 10px;
+	overflow:hidden;
+}
 div.section h1{
 	font-weight:normal;
 }
