@@ -60,6 +60,7 @@
 						<ul>
 						<li><a href="#user-introduction">Introduction</a></li>
 						<li><a href="#user-commands">List of All Commands</a></li>
+						<li><a href="#user-entity-spec">DataTable Entity Specification</a></li>
 						<li><a href="#user-command1">Command: Sign On</a></li>
 						<li><a href="#user-command2">Command: Sign Off</a></li>
 						<li><a href="#user-command3">Command: Add Friend</a></li>
@@ -709,57 +710,57 @@
 						++it;
 					}
 				}</pre>
-		<h1 id="auth-example1">Example Use of AuthServer</h1>
-		We'll stick with the example of the entity Partition: Musician, Row: Tegan_Quin. First, we need to add this to entity to DataTable:
-		<pre>
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/DataTable/Musician/Tegan_Quin/ -d '{"Genre":"Indie Pop","Band":"Tegan & Sara"}' -H "Content-Type: application/json"
-	HTTP/1.1 200 OK
-	Content-Length: 0
+			<h1 id="auth-example1">Example Use of AuthServer</h1>
+			We'll stick with the example of the entity Partition: Musician, Row: Tegan_Quin. First, we need to add this to entity to DataTable:
+			<pre>
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/DataTable/Musician/Tegan_Quin/ -d '{"Genre":"Indie Pop","Band":"Tegan & Sara"}' -H "Content-Type: application/json"
+		HTTP/1.1 200 OK
+		Content-Length: 0
 
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
-	HTTP/1.1 200 OK
-	Content-Length: 87
-	Content-Type: application/json
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+		HTTP/1.1 200 OK
+		Content-Length: 87
+		Content-Type: application/json
 
-	[{"Band":"Tegan & Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
-		Next we need to add this entry to AuthTable. Recall that the entity in AuthTable needs to be:
-		<ul>
-			<li>Partition: Userid</li>
-			<li>Row: Tegan_Quin (The Userid)</li>
-			<li>Properties:</li>
+		[{"Band":"Tegan & Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
+			Next we need to add this entry to AuthTable. Recall that the entity in AuthTable needs to be:
 			<ul>
-				<li>Password:LY2D</li>
-				<li>DataPartition:Musician</li>
-				<li>DataRow:Tegan_Quin</li>
+				<li>Partition: Userid</li>
+				<li>Row: Tegan_Quin (The Userid)</li>
+				<li>Properties:</li>
+				<ul>
+					<li>Password:LY2D</li>
+					<li>DataPartition:Musician</li>
+					<li>DataRow:Tegan_Quin</li>
+				</ul>
 			</ul>
-		</ul>
-		The call to add this to AuthTable is as follows:
+			The call to add this to AuthTable is as follows:
+			<pre>
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Tegan_Quin/ -d '{"Password":"LY2D","DataPartition":"Musician","DataRow":"Tegan_Quin"}' -H "Content-Type: application/json"
+		HTTP/1.1 200 OK
+		Content-Length: 0
+
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh AuthTable
+		HTTP/1.1 200 OK
+		Content-Length: 215
+		Content-Type: application/json
+
+		[{"DataPartition":"Musician","DataRow":"Tegan_Quin","Partition":"Userid","Password":"LY2D","Row":"Tegan_Quin"}]</pre>
+		Finally, to generate the token, we make the call:
 		<pre>
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Tegan_Quin/ -d '{"Password":"LY2D","DataPartition":"Musician","DataRow":"Tegan_Quin"}' -H "Content-Type: application/json"
-	HTTP/1.1 200 OK
-	Content-Length: 0
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/GetUpdateToken/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"
+		HTTP/1.1 200 OK
+		Content-Length: 200
+		Content-Type: application/json
 
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh AuthTable
-	HTTP/1.1 200 OK
-	Content-Length: 215
-	Content-Type: application/json
-
-	[{"DataPartition":"Musician","DataRow":"Tegan_Quin","Partition":"Userid","Password":"LY2D","Row":"Tegan_Quin"}]</pre>
-	Finally, to generate the token, we make the call:
-	<pre>
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/GetUpdateToken/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"
-	HTTP/1.1 200 OK
-	Content-Length: 200
-	Content-Type: application/json
-
-	{"token":"sv=2015-04-05&sig=pKQ8yxUFaKv%2BSZFXU1R2ZJj64v%2BAEse4IXuTTWZnoDM%3D&spr=https%2Chttp&se=2016-08-21T20%3A22%3A33Z&sp=ru&tn=DataTable&spk=Musician&srk=Tegan_Quin&epk=Musician&erk=Tegan_Quin"}</pre>
-	The above is an example of a token that is generated when a user logs on to alter the associated entity in DataTable.</br></br>
-	
-	To generate a Read Token, it would be done in the same way, except that the command sent to AuthTable when putting in Partition: Userid, Row:Tegan_Quin would be:
-	<pre>
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/<b class="arg1">GetReadToken</b>/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"</pre>
-	The difference is highlighted in red, where we call the command GetReadToken instead of GetUpdateToken.
-		<h1 id="auth-conclusion">Conclusion</h1>
+		{"token":"sv=2015-04-05&sig=pKQ8yxUFaKv%2BSZFXU1R2ZJj64v%2BAEse4IXuTTWZnoDM%3D&spr=https%2Chttp&se=2016-08-21T20%3A22%3A33Z&sp=ru&tn=DataTable&spk=Musician&srk=Tegan_Quin&epk=Musician&erk=Tegan_Quin"}</pre>
+		The above is an example of a token that is generated when a user logs on to alter the associated entity in DataTable.</br></br>
+		
+		To generate a Read Token, it would be done in the same way, except that the command sent to AuthTable when putting in Partition: Userid, Row:Tegan_Quin would be:
+		<pre>
+		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/<b class="arg1">GetReadToken</b>/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"</pre>
+		The difference is highlighted in red, where we call the command GetReadToken instead of GetUpdateToken.
+			<h1 id="auth-conclusion">Conclusion</h1>
 		</div>
 		<div class="section" id="session-layer">
 			<h2>3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</h2>
@@ -776,6 +777,29 @@
 													   const string& uri_string, 
 													   const value& req_body)</pre>
 				A list of all the commands in UserServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
+			</div>
+			<h1 id="user-entity-spec">DataTable Entry Specification</h1>
+			To ensure consistency when storing user information, entities in DataTable are entered according to the following set of specifications:
+			<div class="commandspec">
+				<ul>
+					<li>Partition: (User's Country)</li>
+					<li>Row: (User's Last Name),(User's First Name)</li>
+					<li>Properties:</li>
+					<ul>
+						<li>"Friends":"(Friend01's Country);(Friend01's Last Name),(Friend01's First Name)|(Friend02's Country);(Friend02's Last Name),(Friend02's First Name)|..."</li>
+					</ul>
+				</ul>
+			</div>
+			An example of this would be:
+			<div class="commandspec">
+				<ul>
+					<li>Partition: Canada</li>
+					<li>Row: Quin,Tegan</li>
+					<li>Properties:</li>
+					<ul>
+						<li>"Friends":"Canada;Quin,Sara|United_Kingdom;Denton,Alexandra"</li>
+					</ul>
+				</ul>
 			</div>
 			<h1 id="user-command1">Sign On</h1>
 			As with any social network, a client is first required to sign on before they are able to use any of the services.</br></br>
@@ -903,6 +927,76 @@
 				return;
 			}</pre>
 			<h1 id="user-command3">Add Friend</h1>
+			<div class="commandspec" style="margin-left: 1em;">
+			<b>Add Friend</b>
+			<ul>
+				<li>HTTP method: PUT</li>
+				<li>Operation: AddFriend</li>
+				<li>Parameters: Userid, friend country, and full friend name. The friend’s country and full name is required because the user might not know the userid of their friend. Thus a sample request for userid ted adding Joe Peters from Canada as a friend might look like:</br></br>
+				<code>AddFriend/ted/Canada/Peters,Joe</code></br></br></li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The user's list of friends now includes the new friend. Note that if this person was already listed as a friend, they should not be added a second time. The user server does not validate whether the friend actually corresponds to an entity in DataTable.</li>
+				</ul>
+			</ul>
+			</div></br>
+			We begin by ensuring that the user attempting to add a friend is logged in:
+			<pre class="brush: cpp;">
+				if( active_users.find(paths[1]) == active_users.end() ){
+					message.reply(status_codes::Forbidden);
+					return;
+				}</pre>
+			Next, we attempt to retrieve the list of friends the user currently has:
+			<pre class="brush: cpp;">
+				pair<status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};</pre>
+			Recall active_users is of the type unordered_map&lt; string, vector&lt;string> >. Paths[1] is the UserID passed in. The second value accesses one of the following stored in active_users:
+			<pre class="brush: cpp;">
+			// vector&lt;string>[0] = (token)
+			// vector&lt;string>[1] = (partition) (Country)
+			// vector&lt;string>[2] = (row) (Full Name)
+			unordered_map&lt; string, vector&lt;string> > active_users = {};</pre>
+			Next, we find the property "Friends" from the passed back JSON object from the call to get_entity_auth():
+			<pre class="brush: cpp;">
+				string check_for_no_friends;
+				for (const auto& v : check_friends.second.as_object()){
+					if(v.first == "Friends") check_for_no_friends = v.second.as_string();
+				}</pre>
+			The property Friends can be either be empty, or not empty.
+			<ol>
+				<li>Empty: Need only construct a string consisting of the passed in friend</li>
+				<li>Not Empty: Need to concatenate the new friend alongside all the current friends</li>
+			</ol>
+			<pre class="brush: cpp;">
+				if( (check_friends.second.size() == 0) || (check_for_no_friends == "") ){ // User has no friends
+					new_friend = paths[2] + ";" + paths[3];
+				}
+				else{ // User has existing friends, need to concatenate new friend with current list of friends
+					for (const auto& v : check_friends.second.as_object()){
+						if(v.first == "Friends") current_friends = v.second.as_string();
+					}
+					new_friend = current_friends + "|" + paths[2] + ";" + paths[3];
+				}</pre>
+			Before building the JSON Object that will add a new friend to this user's friend list, we check whether or not they are already friends:
+			<pre class="brush: cpp;">
+				string already_exists {paths[2]+";"+paths[3]};
+				if(current_friends.find(already_exists) != string::npos){ 
+					message.reply(status_codes::OK); // The user trying to be added as a friend is already a friend
+					return;
+				}</pre>
+			Finally, we build the new friend list in a JSON Object and store it inside the user's "Friends" property in DataTable:
+			<pre class="brush: cpp;">
+				value props { build_json_object(vector&lt;pair&lt;string,string>> { make_pair(string("Friends"),string(new_friend))})};
+				int add_friend_result = put_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2], props);
+				if(add_friend_result == status_codes::OK){
+					message.reply(status_codes::OK);
+					return;
+				}
+				else{
+					message.reply(add_friend_result);
+					return;
+				}</pre>
 			<h1 id="user-command4">Remove Friend</h1>
 			<h1 id="user-command5">Update Status</h1>
 			<h1 id="user-command6">Get A User's Friend List</h1>
