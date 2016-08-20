@@ -710,12 +710,12 @@
 		<div class="section" id="session-layer">
 			<h2>3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</h2>
 			<div id="user-introduction">
-				This part of the project calls the services of BasicServer and AuthServer in order to run the UserServer and PushServer. More specifically:
+				This part of the project calls the services of BasicServer and AuthServer. There are two servers:
 				<ul>
 					<li>UserServer: A service for managing a user's social networking session</li>
 					<li>PushServer: A service that pushes status updates to all a user's friends in the network</li>
 				</ul>
-				Note that calls are <b>never directly made to Azure Storage</b></br></br>
+				Note that calls are <b>never directly made to Azure Storage.</b></br></br>
 				The main method of making calls from UserServer/PushServer to BasicServer or AuthServer lies in the following function 'do_request()' (which is defined inside of ClientUtils.cpp):
 				<pre class="brush: cpp;">
 				pair&lt;status_code,value&rt; do_request (const method& http_method, 
@@ -724,9 +724,112 @@
 				A list of all the commands in UserServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
 			</div>
 			<h1 id="user-command1">Sign On</h1>
-			As with any social network, a client is first required to sign on before they are able to use any of the services.
+			As with any social network, a client is first required to sign on before they are able to use any of the services.</br></br>
+			<div class="commandspec" style="margin-left: 1em;">
+				<b>Sign On</b>
+				<ul>
+					<li>HTTP method: POST</li>
+					<li>Operation: SignOn</li>
+					<li>Parameters: Userid (Note: A Userid can only be alphabetic characters.)</li>
+					<li>Body: JSON object with the single property Password whose value is a password string. The requirements for the password and the form of the JSON body are exactly as specified for <a href="">GetReadToken</a></li>
+					<li>Response codes:</li>
+					<ul>
+						<li>status_codes::NotFound (404): Either the auth server responded NotFound or the auth server responded OK or no record exists in DataTable for this user.</br></br>
+
+						The auth server makes no guarantees that there is an actual entity in DataTable associated with this user. Therefore, after succesfully receiving a token from the auth server (which guarantees that the userid and password are in AuthTable), the user server also attempts to read the entity in DataTable associated with this userid. If no such record exists, the user server returns status_codes::NotFound to a sign on request and does not record the user as signed in.</li></br>
+						<li>status_codes::OK (200): The auth server returned a token and the expected record exists in DataTable. The user is recorded as signed in.</br></br>
+						If the user is already signed in and attempts to sign in again with the same userid and password, the user server returns OK and continues their existing session.</br></br>
+						If the user is already signed in and makes an unsuccessful attempt to sign in (for example, the second attempt includes the wrong password), the user server returns NotFound but continues their existing session.</li>
+					</ul>
+				</ul>
+			</div></br>
+			UserServer needs to keep track of the current active users at any time, thus we store active users in:
+			<pre class="brush: cpp;">
+				// To ensure multiple users can be logged on at once, the UserID will be the key, and the vector will hold the following information in this order:
+				// vector<string>[0] = (token)
+				// vector<string>[1] = (partition) (Country)
+				// vector<string>[2] = (row) (Full Name)
+				unordered_map< string, vector<string> > active_users = {};</pre>
+			For any given user sign on, UserServer begins by initializing all of the passed in information into variables:
+			<pre class="brush: cpp;">
+			unordered_map&lt;string,string> stored_message = get_json_body(message);
+			// ...
+			const string userID {paths[1]};
+			string pwd {};
+			unordered_map&lt;string,string>::const_iterator got = stored_message.find("Password");
+			if( got != stored_message.end() ){
+				pwd = got->second;
+			}</pre>
+			Then passing all of that information into the function to generate an Update Token from Azure, get_update_token():
+			<pre class="brush: cpp;">
+			/*
+			Utility to get a token good for updating a specific entry
+				from a specific table for one day.
+			*/
+			pair&lt;status_code,string> get_update_token(const string& addr,  const string& userid, const string& password) {
+				value pwd {build_json_object (vector&lt;pair&lt;string,string>> {make_pair("Password", password)})};
+				pair&lt;status_code,value> result {do_request (methods::GET,
+																	 addr +
+																	 get_update_token_op + "/" +
+																	 userid,
+																	 pwd
+																	 )};
+				cerr << "token " << result.second << endl;
+				if (result.first != status_codes::OK)
+					return make_pair (result.first, "");
+				else {
+					string token {result.second["token"].as_string()};
+					return make_pair (result.first, token);
+				}
+			}
+			// ...
+			pair<status_code,string> auth_result {get_update_token(auth_addr, userID, pwd)};</pre>
+			Given that the update token was generated successfully, we begin parsing out what Partition/Row entity this user has been given permission to update. An example of a token is:</br>
+			<pre>
+	sv=2015-04-05&sig=pKQ8yxUFaKv%2BSZFXU1R2ZJj64v%2BAEse4IXuTTWZnoDM%3D&spr=https%2Chttp&se=2016-08-21T20%3A22%3A33Z
+	&sp=ru&tn=DataTable&<b class="arg1">spk=Musician</b>&<b class="arg2">srk=Tegan_Quin</b>&<b class="arg3">epk=Musician</b>&<b class="arg4">erk=Tegan_Quin</b></pre>
+			As highlighted in the colours above, we can parse out the information we need from the token:</br>
+			<pre class="brush: cpp;">
+			if(auth_result.first == status_codes::OK){
+				const string DataTable = "DataTable";
+				// Begin parsing the partition and row from the token
+				string row = auth_result.second.substr(auth_result.second.find("&erk=")+5, auth_result.second.length());
+				string partition = auth_result.second.substr(auth_result.second.find("&epk=")+5, auth_result.second.find("&erk="));
+				partition.erase(partition.length()-(row.length()+5), partition.length());
+				
+				// If there's a "," present in the DataRow, then Azure generates a token with "%2C" in place of ",". Need to change "%2C" with ",".
+				if( row.find("%2C") != string::npos ){
+					row.insert(row.find("%2C"),",");
+					string html_comma = "%2C";
+					row.erase(row.find("%2C"), html_comma.length());
+				}
+			}</pre>
+			With this information we make a call to DataTable using get_entity_auth(), to ensure this DataPartition and DataRow combination exists as an entity in DataTable. If the call succeeds, then we add this user to the list of active users and return status_codes::OK:
+			<pre class="brush: cpp;">
+				pair&lt;status_code,value> get_entity_auth (const string& addr, const string& table, const string& tok, const string& partition, const string&row){
+					pair&lt;status_code,value> result {
+					do_request(methods::GET, addr + read_entity_auth + "/" + table + "/" + tok + "/" + partition + "/" + row)};
+					return result;
+					}
+				}
+				// ...
+				pair&lt;status_code,value> data_result {get_entity_auth(basic_addr, DataTable, auth_result.second, partition, row)};
+				
+				if(data_result.first == status_codes::OK){
+					active_users.insert( { paths[1], {auth_result.second, partition, row} } ); // Adding the user to the unordered_map of active users
+					message.reply(status_codes::OK);
+					return;
+				}
+				else{ // No record exists in DataTable for this user
+					message.reply(status_codes::NotFound);
+					return;
+				}</pre>
 		</div>
 		</br>
 	</div>
 </body>
 </html>
+<!--
+<pre class="brush: cpp;">
+</pre>
+-->

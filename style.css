@@ -37,6 +37,9 @@ div.commandspec{
 div.section h1{
 	font-weight:normal;
 }
+div.section pre{
+    white-space: pre-wrap;
+}
 div.document h2{
     background-color: #f2f2f2;
     font-weight: normal;
