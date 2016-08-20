@@ -18,7 +18,7 @@
 		<img src="header02.jpeg" height="250"/>
 		<img src="header03.jpg" height="250"/>
 		<p>
-		During my exercise routines, or time spent coding, there'll be times I'll listen to <a href="https://en.wikipedia.org/wiki/Electronic_dance_music">Electronic Dance Music</a>. In particular, the mixes <a href="https://en.wikipedia.org/wiki/Gareth_Emery">Gareth Emery</a> created for his podcasts from 2006 to 2014. Unfortunately, the website does not have an option to download all of the episodes at once, instead requiring one download at a time, as seen here:</p>
+		During my exercise routines, or time spent coding, there'll be times I'll put on <a href="https://en.wikipedia.org/wiki/Electronic_dance_music">Electronic Dance Music</a>. In particular, the mixes <a href="https://en.wikipedia.org/wiki/Gareth_Emery">Gareth Emery</a> created for his podcasts from 2006 to 2014. Unfortunately, the website does not have an option to download all of the episodes at once, instead requiring one download at a time, as seen here:</p>
 		<a href="http://electricfor.life/page/the-gareth-emery-podcast-archive-250-310/" target="_parent"><img src="garethemeryarchive.jpg"/></a></br></br>
 		Instead of clicking the Download button 310 times, I decided to use my knowledge of Bash Scripting to do it for me.</br></br>
 		The main command used here is: <code><a href="https://www.gnu.org/software/wget/manual/wget.html"><b>wget</b></a></code></br>
@@ -26,7 +26,7 @@
 		
 		Using this, I needed to figure out the URL prefix used for each episode.</br></br>
 		Episodes 1-99 were stored with the prefix </br></br><code>http://www.galexmusic.com/podcast/garethemerypodcast_0[0-9][1-9]</code>, where <code>0[0-9][1-9]</code> is the Regular Expression for episode numbers between 001-099.</br></br>
-		Episodes 100-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_{0-9]{3}.m4a</code> where <code>[0-9]{3}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
+		Episodes 100-310 were stored with prefix </br></br><code> http://podcast.galexmusic.com/podcast/garethemerypodcast_[0-9]{3}.m4a</code> where <code>[0-9]{3}.m4a</code> is the Regular Expression for any episodes with the numbers 000-999.</br></br>
 		
 		Adding a small wrinkle to this is episodes 1-44 are in the .mp3 file format, whereas episodes 45-310 are in the .m4a file format, hence the need for the first if block</br>
 		<pre class="brush: bash;">

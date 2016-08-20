@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../style.css"/>
+	</head>
+	<body>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b></b>
+			<ul>
+				<li>HTTP method: POST</li>
+				<li>Operation: SignOn</li>
+				<li>Parameters: Userid (Note: A Userid can only be alphabetic characters.)</li>
+				<li>Body: JSON object with the single property Password whose value is a password string. The requirements for the password and the form of the JSON body are exactly as specified for <a href="">GetReadToken</a></li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::NotFound (404): Either the auth server responded NotFound or the auth server responded OKor no record exists in DataTable for this user.</br>
+
+					The auth server makes no guarantees that there is an actual entity in DataTable associated with this user. Therefore, after succesfully receiving a token from the auth server (which guarantees that the userid and password are in AuthTable), the user server also attempts to read the entity in DataTable associated with this userid. If no such record exists, the user server returns status_codes::NotFound to a sign on request and does not record the user as signed in.</li>
+					<li>status_codes::OK (200): The auth server returned a token and the expected record exists in DataTable. The user is recorded as signed in.</br>
+					If the user is already signed in and attempts to sign in again with the same userid and password, the user server returns OK and continues their existing session.</br>
+					If the user is already signed in and makes an unsuccessful attempt to sign in (for example, the second attempt includes the wrong password), the user server returns NotFound but continues their existing session.</li>
+				</ul>
+			</ul>
+		</div>
+		<div class="commandspec" style="margin-left: 1em;">
+			<b></b>
+			<ul>
+				<li>HTTP method: </li>
+				<li>Operation: </li>
+				<li>Parameters: </li>
+				<li>Body: </li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): </li>
+					<li>status_codes::NotFound (404): t</li>
+					<li>status_codes::OK (200): .</li>
+				</ul>
+			</ul>
+		</div>
+	</body>
+</html>
+<!-- Template
+	<div class="commandspec" style="margin-left: 1em;">
+			<b></b>
+			<ul>
+				<li>HTTP method: </li>
+				<li>Operation: </li>
+				<li>Parameters: </li>
+				<li>Body: </li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::BadRequest (400): </li>
+					<li>status_codes::NotFound (404): t</li>
+					<li>status_codes::OK (200): .</li>
+				</ul>
+			</ul>
+	</div>
+-->

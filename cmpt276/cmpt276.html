@@ -57,6 +57,11 @@
 						<li><a href="#auth-conclusion">Conclusion</a></li>
 						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
+						<ul>
+						<li><a href="#user-introduction">Introduction</a></li>
+						<li><a href="#user-command1">Command: Sign On</a></li>
+						<li><a href=""></a></li>
+						</ul>
 				</table>
 			</div>
 			</body>
@@ -703,7 +708,22 @@
 		<h1 id="auth-conclusion">Conclusion</h1>
 		</div>
 		<div class="section" id="session-layer">
-			<h2>3. High-Level Interface: Session Layer</h2>
+			<h2>3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</h2>
+			<div id="user-introduction">
+				This part of the project calls the services of BasicServer and AuthServer in order to run the UserServer and PushServer. More specifically:
+				<ul>
+					<li>UserServer: A service for managing a user's social networking session</li>
+					<li>PushServer: A service that pushes status updates to all a user's friends in the network</li>
+				</ul>
+				Note that calls are <b>never directly made to Azure Storage</b></br></br>
+				The main method of making calls from UserServer/PushServer to BasicServer or AuthServer lies in the following function 'do_request()' (which is defined inside of ClientUtils.cpp):
+				<pre class="brush: cpp;">
+				pair&lt;status_code,value&rt; do_request (const method& http_method, 
+													   const string& uri_string, 
+													   const value& req_body)</pre>
+				A list of all the commands in UserServer can be found <a href=""><b>here</b></a>.
+				As with any social network, a client is first required to sign on before they are able to use any of the services.
+			</div>
 		</div>
 		</br>
 	</div>
