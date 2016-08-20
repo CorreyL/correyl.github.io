@@ -1019,7 +1019,7 @@
 				return;
 			}
 
-			pair<status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};
+			pair&lt;status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};
 			
 			string current_friends;
 			string check_for_no_friends;
@@ -1059,7 +1059,7 @@
 			}</pre>
 			Once that has been taken care of, as done with Add Friend, we build the new friends list as a JSON Object, and store it in the property "Friends" of the current user:
 			<pre class="brush: cpp;">
-			value props { build_json_object(vector<pair<string,string>> { make_pair(string("Friends"),string(current_friends))})};
+			value props { build_json_object(vector&lt;pair&lt;string,string>> { make_pair(string("Friends"),string(current_friends))})};
 			int unfriend_result = put_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2], props);
 			
 			if(unfriend_result == status_codes::OK){
@@ -1071,7 +1071,43 @@
 				return;
 			}</pre>
 			<h1 id="user-command5">Update Status</h1>
+			<pre class="brush: cpp;">
+			</pre>
 			<h1 id="user-command6">Get A User's Friend List</h1>
+			<div class="commandspec" style="margin-left: 1em;">
+			<b>Get A User's Friend List</b>
+			<ul>
+				<li>HTTP method: GET</li>
+				<li>Operation: ReadFriendList</li>
+				<li>Parameters: Userid</li>
+				<li>Body: None</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::Forbidden (403): The userid does not have an active session (is not signed in)</li>
+					<li>status_codes::OK (200): The response body is a JSON object with the single property Friends and an associated value string giving the friend list. The friend list string uses the same representation stored in the database</li>
+				</ul>
+			</ul>
+			</div></br>
+			We start in the same manner we retrieve the current friend list in 'Add Friend' and 'Remove Friend' (check that the user is logged in, and use get_entity_auth() to retrieve the friend list), only we need not alter the friend list in any way, just pass it back as a JSON Object:
+			<pre class="brush: cpp;">
+			if( active_users.find(paths[1]) == active_users.end() ){
+				message.reply(status_codes::Forbidden);
+				return;
+			}
+			
+			pair&lt;status_code,value> read_result {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};
+			
+			string current_friends;
+			for (const auto& v : read_result.second.as_object()){
+				if(v.first == "Friends") current_friends = v.second.as_string();
+			}
+			
+			value props { build_json_object(vector&lt;pair&lt;string,string>> { make_pair(string("Friends"),string(current_friends))})};
+			
+			if( read_result.first == status_codes::OK ){
+				message.reply(status_codes::OK, props); // Note that the JSON Object containing the friend list is passed back here alongside status_codes::OK
+				return;
+			}</pre>
 		</div>
 	</div>
 </body>
