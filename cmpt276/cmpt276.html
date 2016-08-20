@@ -66,6 +66,9 @@
 						<li><a href="#user-command3">Command: Add Friend</a></li>
 						<li><a href="#user-command4">Command: Remove Friend</a></li>
 						<li><a href="#user-command5">Command: Update Status</a></li>
+						<ul>
+							<li><a href="#push-command1">PushServer Command: Push Status to All Friends</a></li>
+						</ul>
 						<li><a href="#user-command6">Command: Get A User's Friend List</a></li>
 						</ul>
 				</table>
@@ -1071,8 +1074,57 @@
 				return;
 			}</pre>
 			<h1 id="user-command5">Update Status</h1>
+			We first obtain the friends list in the same way we did for Add Friend and Remove Friend, building it into a JSON Object:
 			<pre class="brush: cpp;">
-			</pre>
+			if( active_users.find(paths[1]) == active_users.end() ){ // User is not signed in
+				message.reply(status_codes::Forbidden);
+				return;
+			}
+			
+			value status_prop { build_json_object(vector&lt;pair&lt;string,string>> { make_pair(string("Status"),string(paths[2])) } ) };
+			
+			int status_change_result = put_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2], status_prop);
+			
+			pair&lt;status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};
+			
+			string current_friends;
+			string check_for_no_friends;
+			for (const auto& v : check_friends.second.as_object()){
+				if(v.first == "Friends") check_for_no_friends = v.second.as_string();
+			}
+			if( (check_friends.second.size() == 0) || (check_for_no_friends == "") ){ // User has no friends
+				message.reply(status_codes::OK);
+				return;
+			}
+			else{
+				for (const auto& v : check_friends.second.as_object()){
+					if(v.first=="Friends") current_friends = v.second.as_string();
+				}
+			}
+			
+			value props { build_json_object(vector&lt;pair&lt;string,string>> { make_pair(string("Status"),string(paths[2])), make_pair(string("Friends"),string(current_friends) ) } ) };</pre>
+			Then we pass the JSON Object containing the friend list into a do_request() to PushServer:
+			<pre class="brush: cpp;">
+			pair&lt;status_code,value> push_status_result = do_request( methods::POST, push_addr + push_status + "/" + active_users[paths[1]][1] + "/" + active_users[paths[1]][2] + "/" + paths[2], props );</pre>
+			This executes the only command found in PushServer,
+			<div class="commandspec" style="margin-left: 1em;" id="push-command1">
+				<b>Push Status Update To All Friends of This User</b>
+				<ul>
+					<li>HTTP method: POST</li>
+					<li>Operation: PushStatus</li>
+					<li>Parameters: User country, user name, status.</br></br>
+					Note that the first parameter is not the userid. This saves the push server from having to call the authentication server to convert a userid to an actual user name.</li>
+					<li>Body: A JSON Object whose sole property is "Friends", for which the value is the string representation of a friends list</li>
+					<li>Response codes:</li>
+					<ul>
+						<li>status_codes::OK (200): The correct number of parameters were passed to the command and every friend had an update sent. The push server does not validate the parameters. For example, the push server does not ensure that the user named as having this status actually has a record in DataTable or that all the friends on the friend list are in the database.</br></br>
+
+						Note that the push server ignores failing updates. For example, if a (friend-country, friend-name) pair on the friends list do not have a corresponding entity in DataTable, the push server simply ignores the NotFound status code from the UpdateEntityAdmin operation and proceeds to the next friend in the list.</br></br>
+
+						The server sends the OK response after attempting to update the Updates entry for every friend in the friends list.</li>
+					</ul>
+				</ul>
+			</div>
 			<h1 id="user-command6">Get A User's Friend List</h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A User's Friend List</b>

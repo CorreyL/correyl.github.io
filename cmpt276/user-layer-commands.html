@@ -80,7 +80,26 @@
 					<li>status_codes::OK (200): The user's Status property has been set to the status string and every friend in the user's friend list has had this status added to their Updates property.</li>
 				</ul>
 			</ul>
-			</div></br>
+		</div>
+		<b style="margin-left: 4em;">Note:</b> Update Status depends on calling the only command in PushServer, the specification of which is found here:</br>
+		<div class="commandspec" style="margin-left: 4em;" id="push-command1">
+			<b>Push Status Update To All Friends of This User</b>
+			<ul>
+				<li>HTTP method: POST</li>
+				<li>Operation: PushStatus</li>
+				<li>Parameters: User country, user name, status.</br></br>
+				Note that the first parameter is not the userid. This saves the push server from having to call the authentication server to convert a userid to an actual user name.</li>
+				<li>Body: A JSON Object whose sole property is "Friends", for which the value is the string representation of a friends list</li>
+				<li>Response codes:</li>
+				<ul>
+					<li>status_codes::OK (200): The correct number of parameters were passed to the command and every friend had an update sent. The push server does not validate the parameters. For example, the push server does not ensure that the user named as having this status actually has a record in DataTable or that all the friends on the friend list are in the database.</br></br>
+
+					Note that the push server ignores failing updates. For example, if a (friend-country, friend-name) pair on the friends list do not have a corresponding entity in DataTable, the push server simply ignores the NotFound status code from the UpdateEntityAdmin operation and proceeds to the next friend in the list.</br></br>
+
+					The server sends the OK response after attempting to update the Updates entry for every friend in the friends list.</li>
+				</ul>
+			</ul>
+		</div></br>
 		<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A User's Friend List</b>
 			<ul>
