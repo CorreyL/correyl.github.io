@@ -133,6 +133,13 @@
 		</table></br></center>
 		<p>
 			Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
+			It is important to know that calls to any of the servers described below are done using the Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a>. An example of a command to the database server, BasicServer, is:</br></br>
+			<code>$ curl -i -X post http://localhost:34568/CreateTableAdmin/MyTable</code></br></br>
+			Where all the servers store the passed in arguments in the variable 'paths'. As such,</br>
+			<ol>
+				<li>paths[0] == 'CreateTableAdmin'</li>
+				<li>paths[1] == 'MyTable'
+			</ol>
 			The back-end was set up as a tiered service as 4 different servers:</br>
 			<center><img src="cmpt276architecture.jpg"/></br></center>
 		</p>
@@ -150,7 +157,7 @@
 					<li>PUT</li>
 					<li>DELETE</li>
 				</ul>
-				The URI specifies the server being called, the command, and any corresponding arguments required by the command. 
+				The URI specifies the server being called, the command, and any corresponding arguments required by the command, possibly including a <a href="http://www.json.org/"><b>JSON Object</b></a>.
 			</p>
 			<h1 id="database-example1">Example of A Call to the Server</h1>
 			The simplest command to demonstrate a call to the server is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
@@ -167,12 +174,12 @@
 						<li>status_codes::Accepted (202): Table already existed</li>
 					</ul>
 				</ul>
-				This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br>
+				<b>Note:</b> This operation is idempotent—“creating” a table that has already been created returns an HTTP 202 Accepted status.</br>
 			</div></br>
 			Which is performed by the URI:</br></br>
 			<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
-			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>.</br></br>
-			The Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
+			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>, which will generate an Azure Table named 'MyTable'.</br></br>
+			Recall that the Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
 			<code>$ curl -i -X post http://localhost:34568/CreateTableAdmin/MyTable</code></br></br>
 			The following is the C++ code found in BasicServer.cpp that handles this call.
 			<!-- C++ Code for CreateTableAdmin -->
@@ -419,7 +426,17 @@
 
 	HTTP/1.1 200 OK
 	Content-Length: 0
-
+		</pre>
+		Then I use the script dumptable.sh:
+		<pre class="brush: bash;">
+		#!/bin/bash
+		if [ $# -eq 1 ] ; then
+			curl -i -X get $B/ReadEntityAdmin/$1
+		else
+			curl -i -X get $B/ReadEntityAdmin/DataTable
+		fi</pre>
+		To output the contents of the table Artists:
+		<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh Artists
 	HTTP/1.1 200 OK
 	Content-Length: 338
@@ -440,6 +457,7 @@
 
 	[{"Partition":"Actor","Row":"Krysten_Ritter","TV_Show":"Jessica Jones"},
 	{"Partition":"Actor","Row":"Rami_Malek","TV_Show":"Mr. Robot"}]</pre>
+	Note how only the entities with the partition 'Actor' were returned.
 		<h1 id="database-specific-example2">An example of using 'Get All Entities Containing All Specified Properties':</h1>
 		Here, I specify that I only want entities with the property "Genre".
 		<pre>
@@ -466,7 +484,7 @@
 			In order to keep track of the registered username & password combinations, we created a separate Microsoft Azure table named AuthTable, which has the following attributes:</br></br>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>AuthTable</b>
-				<li>The table storing userid and password data. The table has only one partition, Userid, in which all entities are placed. The row key is the userid. For each user, the following three properties are stored:</li>
+				The table storing userid and password data. The table has only one partition, Userid, in which all entities are placed. The row key is the userid. For each user, the following three properties are stored:
 				<ol>
 					<li><b>Password:</b> The password for this userid.</li>
 					<li><b>DataPartition:</b> Combined with DataRow, the key for the single entity that this userid can access in DataTable.</li>
@@ -504,7 +522,7 @@
 			</ul>
 			Note: For the purposes of this project, the passwords were sent over http. In a real system, calls to the authentication server would be done via https rather than http.
 			</div></br>
-			This command returns the first of two types of tokens that AuthServer returns. This token allows the user and entity associated with the token to read the data from the entity.</br></br>
+			This command returns the first of two types of tokens that AuthServer returns. This token allows the user to read and update the data from the entity associated with the token.</br></br>
 			Inside of the while loop that iterates through all entities of DataTable, we first check for the Partition/Row combination "Userid"/(The passed in username):
 			<pre class="brush: cpp;">
 				if( it->partition_key() == "Userid" && it->row_key() == paths[1] )</pre>
@@ -773,13 +791,13 @@
 					<li>UserServer: A service for managing a user's social networking session</li>
 					<li>PushServer: A service that pushes status updates to all a user's friends in the network</li>
 				</ul>
-				Note that calls are <b>never directly made to Azure Storage.</b></br></br>
+				Note that calls are <b>never directly made to Azure Storage</b> from UserServer or PushServer.</br></br>
 				The main method of making calls from UserServer/PushServer to BasicServer or AuthServer lies in the following function 'do_request()' (which is defined inside of ClientUtils.cpp):
 				<pre class="brush: cpp;">
 				pair&lt;status_code,value&rt; do_request (const method& http_method, 
 													   const string& uri_string, 
 													   const value& req_body)</pre>
-				A list of all the commands in UserServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
+				A list of all the commands in UserServer and PushServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
 			</div>
 			<h1 id="user-entity-spec">DataTable Entry Specification</h1>
 			To ensure consistency when storing user information, entities in DataTable are entered according to the following set of specifications:
@@ -953,7 +971,7 @@
 				}</pre>
 			Next, we attempt to retrieve the list of friends the user currently has:
 			<pre class="brush: cpp;">
-				pair<status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};</pre>
+				pair&lt;status_code,value> check_friends {get_entity_auth(basic_addr, DataTable, active_users[paths[1]][0], active_users[paths[1]][1], active_users[paths[1]][2])};</pre>
 			Recall active_users is of the type unordered_map&lt; string, vector&lt;string> >. Paths[1] is the UserID passed in. The second value accesses one of the following stored in active_users:
 			<pre class="brush: cpp;">
 			// vector&lt;string>[0] = (token)
