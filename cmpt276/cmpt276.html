@@ -1124,7 +1124,135 @@
 						The server sends the OK response after attempting to update the Updates entry for every friend in the friends list.</li>
 					</ul>
 				</ul>
-			</div>
+			</div></br>
+			Inside PushServer, we obtain the friend list from the passed in JSON Object from UserServer and store it as a string inside the variable all_friends:
+			<pre class="brush: cpp;">
+			unordered_map&lt;string,string> stored_message = get_json_body(message);
+			unordered_map&lt;string,string>::const_iterator got = stored_message.find("Friends");
+			string all_friends {};
+			if( got != stored_message.end() ){
+					all_friends = got->second;
+			}</pre>
+			Given that a user has no friends, we just pass back status_codes::OK, otherwise we check whether the user has multiple friends, or only one single friend.
+			<pre class="brush: cpp;">
+				if( (stored_message.size() == 0) || (got == stored_message.end()) || (all_friends == "") ){ // The user has no friends
+					message.reply(status_codes::OK);
+					return;
+				}
+				else{
+					got = stored_message.find("Friends");
+					if( got != stored_message.end() ){
+						all_friends = got->second;
+					}
+					string current_friend {};
+					if(all_friends.find("|") == string::npos){ // This user only has one friend
+						current_friend = all_friends;
+					}
+					else{
+						current_friend = all_friends.substr( 0, all_friends.find("|") ); // The first of the multiple friends this user has
+					}
+				}</pre>
+				We initialize all the variables we'll need to keep track of for the current friend we're adding the status update to, then parse out the country, name from the current friend:
+				<pre class="brush: cpp;">
+					string current_country {};
+					string current_name {};
+					string current_properties {};
+					string prop {"Updates"};
+					bool done {false};
+					unordered_map&lt;string,string> extract_json {};
+					while( !done ){
+						current_country = current_friend.substr( 0, current_friend.find(";") ); // Parse out the country from current_friend
+						current_name = current_friend.substr( current_friend.find(";")+1, current_friend.length() ); // Parse out the name from current_friend
+						
+						// ...
+					}
+					message.reply(status_codes::OK);
+					return;</pre>
+				Next we make a call to BasicServer to retrieve the contents stored in the property "Updates" as a string.</br>
+				<pre class="brush: cpp;">
+					pair&lt;status_code,value> get_result { get_partition_entity(basic_addr, DataTable, current_country, current_name) };
+					if( get_result.first == status_codes::OK ){ // If not OK, then the entity does not exist
+						for ( const auto& v : get_result.second.as_object() ){
+							if(v.first == "Updates") extract_json[v.first] = v.second.as_string();
+						}
+						unordered_map&lt;string,string>::const_iterator got = extract_json.find("Updates");
+						// ...
+					}
+					if( all_friends.find("|") == string::npos ){ // The last friend has been updated
+						done = true;
+					}
+					all_friends.erase( 0, all_friends.find("|")+1 );
+					current_friend = all_friends.substr(0, all_friends.find("|"));</pre>
+				If the contents are empty, then we just need to update the entity's "Update" content with the new status.</br>
+				Otherwise, we need to concatenate the entity's current "Update" content with the new status:
+				<pre class="brush: cpp;">
+					if( got == extract_json.end() ){ // The user that we're trying to access does not have the property "Updates"
+						int update_result = put_entity(current_country, current_name, prop, paths[3]+"\n" );
+					}
+					else{
+						current_properties = got->second;
+						int update_result = put_entity(current_country, current_name, prop, current_properties+paths[3]+"\n" );
+					}</pre>
+					This is repeated for every friend in passed in friend list until all of them have received the status update. Together, the source code that handles this is:
+					<pre class="brush: cpp;">
+					if( paths[0] == push_status ){
+						unordered_map&lt;string,string> stored_message = get_json_body(message);
+						unordered_map&lt;string,string>::const_iterator got = stored_message.find("Friends");
+						string all_friends {};
+						if( got != stored_message.end() ){
+								all_friends = got->second;
+						}
+						if( (stored_message.size() == 0) || (got == stored_message.end()) || (all_friends == "") ){ // The user has no friends
+							message.reply(status_codes::OK);
+							return;
+						}
+						else{
+							got = stored_message.find("Friends");
+							if( got != stored_message.end() ){
+								all_friends = got->second;
+							}
+							string current_friend {};
+							if(all_friends.find("|") == string::npos){ // This user only has one friend
+								current_friend = all_friends;
+							}
+							else{
+								current_friend = all_friends.substr( 0, all_friends.find("|") ); // The first of the multiple friends this user has
+							}
+							string current_country {};
+							string current_name {};
+							string current_properties {};
+							string prop {"Updates"};
+							bool done {false};
+							unordered_map&lt;string,string> extract_json {};
+							while( !done ){
+								current_country = current_friend.substr( 0, current_friend.find(";") ); // Parse out the country from current_friend
+								current_name = current_friend.substr( current_friend.find(";")+1, current_friend.length() ); // Parse out the name from current_friend
+								
+								pair&lt;status_code,value> get_result { get_partition_entity(basic_addr, DataTable, current_country, current_name) };
+								if( get_result.first == status_codes::OK ){ // If not OK, then the entity does not exist
+									for ( const auto& v : get_result.second.as_object() ){
+										if(v.first == "Updates") extract_json[v.first] = v.second.as_string();
+									}
+									unordered_map&lt;string,string>::const_iterator got = extract_json.find("Updates");
+									if( got == extract_json.end() ){ // The user that we're trying to access does not have the property "Updates"
+										int update_result = put_entity(current_country, current_name, prop, paths[3]+"\n" );
+									}
+									else{
+										current_properties = got->second;
+										int update_result = put_entity(current_country, current_name, prop, current_properties+paths[3]+"\n" );
+									}
+								}
+
+								if( all_friends.find("|") == string::npos ){ // The last friend has been updated
+									done = true;
+								}
+								all_friends.erase( 0, all_friends.find("|")+1 );
+
+								current_friend = all_friends.substr(0, all_friends.find("|"));
+							}
+							message.reply(status_codes::OK);
+							return;
+					}</pre>
 			<h1 id="user-command6">Get A User's Friend List</h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A User's Friend List</b>
