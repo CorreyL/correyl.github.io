@@ -70,6 +70,7 @@
 							<li><a href="#push-command1">PushServer Command: Push Status to All Friends</a></li>
 						</ul>
 						<li><a href="#user-command6">Command: Get A User's Friend List</a></li>
+						<li><a href="#user-example1">Example Use of UserServer/PushServer</a></li>
 						</ul>
 				</table>
 			</div>
@@ -1312,9 +1313,87 @@
 				message.reply(status_codes::OK, props); // Note that the JSON Object containing the friend list is passed back here alongside status_codes::OK
 				return;
 			}</pre>
+			<h1 id="user-example1"><a href="#table-of-contents">Example Use of UserServer/PushServer</a></h1>
+			We begin with a hypothetical set of users that are currently registered for this social network (recall the <a href="#user-entity-spec"><b>standard for how users are stored in DataTable</b></a>):
+			<center>
+				<table border="1">
+				<tr>
+					<th>Partition</th>
+					<th>Row</th>
+					<th>JSON Object</h>
+				</tr>
+				<tr>
+					<td>Canada</td>
+					<td>Quin,Tegan</td>
+					<td>
+						Friends:</br>
+						Status:
+					</td>
+				</tr>
+				<tr>
+					<td>Canada</td>
+					<td>Quin,Sara</td>
+					<td>
+						Friends:</br>
+						Status:
+					</td>
+				</tr>
+				<tr>
+					<td>United_Kingdom</td>
+					<td>Denton,Alexandra</td>
+					<td>
+						Friends:</br>
+						Status:
+					</td>
+				</tr>
+				<tr>
+					<td>United_States</td>
+					<td>Banks,Jillian</td>
+					<td>
+						Friends:</br>
+						Status:
+					</td>
+				</tr>
+				</table>
+			</center>
+			We begin by adding these users to DataTable:
+			<pre class="brush: bash;">
+				#!/bin/bash
+				#UserServerEx.sh
+				curl -i -X put $B/UpdateEntityAdmin/DataTable/Canada/Quin,Tegan/ -d '{"Friends":"","Status":""}' -H "Content-Type: application/json";
+				curl -i -X put $B/UpdateEntityAdmin/DataTable/Canada/Quin,Sara/ -d '{"Friends":"","Status":""}' -H "Content-Type: application/json";
+				curl -i -X put $B/UpdateEntityAdmin/DataTable/United_Kingdom/Denton,Alexandra/ -d '{"Friends":"","Status":""}' -H "Content-Type: application/json";
+				curl -i -X put $B/UpdateEntityAdmin/DataTable/United_States/Banks,Jillian/ -d '{"Friends":"","Status":""}' -H "Content-Type: application/json";</pre>
+			<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1/scripts$ ./UserServerEx.sh
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 292
+	Content-Type: application/json
+
+	[{"Friends":"","Partition":"Canada","Row":"Quin,Sara","Status":""},
+	{"Friends":"","Partition":"Canada","Row":"Quin,Tegan","Status":""},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
+			Let's say Tegan Quin wanted to add Sara Quin as a friend, but was not signed on:
+			<pre>
+			
+			</pre>
+			</div>
 		</div>
-	</div>
-</body>
+	</body>
 </html>
 <!--
 <pre class="brush: cpp;">
