@@ -54,6 +54,7 @@
 						<li><a href="#auth-command1">Command: Get A Read Token</a></li>
 						<li><a href="#auth-command2">Command: Get An Update Token</a></li>
 						<li><a href="#auth-example1">Example Use of AuthServer</a></li>
+						<li><a href="#auth-source">Source Code</a></li>
 						<!-- <li><a href="#auth-conclusion">Conclusion</a></li> -->
 						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
@@ -77,8 +78,9 @@
 								<li><a href="#user-example03">Retrieve Friend List</li>
 								<li><a href="#user-example04">Simultaneous Users</li>
 							</ul>
+							<li><a href="#limits">Limitations of the Service</a></li>
+							<li><a href="#user-source">Source Code</a></li>
 						</ul>
-						<li><a href="#limits">Limitations of the Service</a></li>
 				</table>
 			</div>
 			</body>
@@ -86,9 +88,9 @@
 		<div class="section" id="preface">
 		<h2><a href="#table-of-contents">Preface</a></h2>
 		<p>
-			In this course, my teammates and I were tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.</br></br>
+			In this course, my teammates and I were tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc. The repository of this project can be found <a href="https://github.com/CorreyL/cmpt276project" target="_parent"><b>here</b></a>.</br></br>
 			
-			It is important to note that much of the work was split so that I was heading the implementation of the commands of the servers, where my teammates were mainly responsible for unit testing and returning the results to me to fix the implementations accordingly. Nevertheless, I wrote a few unit tests enough to familiarize myself with the process of unit testing, specifically with <a href="https://unittest-cpp.github.io/"><b>UnitTest++</b></a>.
+			It is important to note that much of the work was split so that I was heading the implementation of the commands of the servers, where my teammates were mainly responsible for unit testing and returning the results to me to fix the implementations accordingly. Nevertheless, I wrote a few unit tests enough to familiarize myself with the process of unit testing, specifically with <a href="https://unittest-cpp.github.io/" target="_parent"><b>UnitTest++</b></a>, but that portion of the project is not featured on this page as of this writing, but can found in <a href="https://github.com/CorreyL/cmpt276project/blob/master/tester.cpp" target="_parent"><b>tester.cpp</b></a>.
 		</p>
 		<p>
 			The main components of the project are:
@@ -101,9 +103,9 @@
 			</ul>
 		</p>
 		<p>
-			We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/" target="_parent">Azure Table service</a>, which stored <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores properties. Each property within the JSON object is a pair, the first of which is generally a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:
+			We specifically used the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-table-design-guide/" target="_parent">Azure Table service</a>, which stores <i>entities</i> (equivalent to rows in a spreadsheet) that are uniquely identified by their Partition and Row column entries. Every entity has an associated JSON Object that stores Properties. Each property within the JSON object is a pair, the first of which is a std::string to describe the property and the second a web::json::value that holds the property. To use artists as an example:
 		</p>
-		<center><table style="width:70%" border="1">
+		<center><h1>Artists</h1><table style="width:70%" border="1">
 			<tr>
 				<th>Partition</th>
 				<th>Row</th> 
@@ -142,7 +144,7 @@
 			</tr>
 		</table></br></center>
 		<p>
-			Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
+			Here we have a named "Artists", where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs, stored in the Azure Storage service.</br></br>
 			The back-end was set up as a tiered service as 4 different servers:</br>
 			<center><img src="cmpt276architecture.jpg"/></br></center>
 		</p>
@@ -455,7 +457,7 @@
 	{"Genre":"Alternative_R&B,"Latest_Song":"Gemini_Feed","Partition":"Musician","Row":"Banks"},
 	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
 	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
-		<h1 id="database-specific-example1">An example of using 'Get All Entities From A Specific Partition':</h1>
+		<h1 id="database-specific-example1"><a href="#table-of-contents">An example of using 'Get All Entities From A Specific Partition':</a></h1>
 		Here, I specify that I only want entities from the Partition 'Actor'
 		<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/website/correyl.github.io$ curl -i -X get $B/ReadEntityAdmin/Artists/Actor/*
@@ -466,7 +468,7 @@
 	[{"Partition":"Actor","Row":"Krysten_Ritter","TV_Show":"Jessica Jones"},
 	{"Partition":"Actor","Row":"Rami_Malek","TV_Show":"Mr. Robot"}]</pre>
 	Note how only the entities with the partition 'Actor' were returned.
-		<h1 id="database-specific-example2">An example of using 'Get All Entities Containing All Specified Properties':</h1>
+		<h1 id="database-specific-example2"><a href="#table-of-contents">An example of using 'Get All Entities Containing All Specified Properties':</a></h1>
 		Here, I specify that I only want entities with the property "Genre".
 		<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get $B/ReadEntityAdmin/Artists -d '{"Genre":"*"}' -H "Content-Type: application/json"
@@ -478,6 +480,8 @@
 	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
 	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
 		Since the Musicians are the only ones with the property "Genre", they were the only entities returned.
+		<h1 id="database-source"><a href="#table-of-contents">Source Code</a></h1>
+		The source code for BasicServer.cpp can be found <a href="https://github.com/CorreyL/cmpt276project/blob/master/BasicServer.cpp" target="_parent"><b>here</b></a>.
 		<!--
 		<h1 id="database-conclusion">Conclusion</h1>
 		<p>
@@ -791,6 +795,8 @@
 		<pre>
 		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/<b class="arg1">GetReadToken</b>/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"</pre>
 		The difference is highlighted in red, where we call the command GetReadToken instead of GetUpdateToken.
+		<h1 id="auth-source"><a href="#table-of-contents">Source Code</a></h1>
+		The source code for AuthServer.cpp can be found <a href="https://github.com/CorreyL/cmpt276project/blob/master/AuthServer.cpp" target="_parent"><b>here</b></a>.
 			<!-- <h1 id="auth-conclusion">Conclusion</h1> -->
 		</div>
 		<div class="section" id="session-layer">
@@ -1562,9 +1568,19 @@
 	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"","Updates":"Hello_World!\n<b class="arg1">Why_can't_I_use_spacebar_=(\n</b>"},
 	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"","Updates":"Hello_World!\n<b class="arg1">Why_can't_I_use_spacebar_=(\n</b>"}]</pre>
 	</ol>
-			</div>
 		<h2 id="limits">Limitations of the Service</h2>
-		
+		To keep the project managable in the timeframe of a 4-month semester, the service has quite a few design flaws/oversights that a real social network would never have, including but not limited to:
+		<ul>
+			<li>The "Friends" property of two users should not be updated until both users have acknowledged that they wish to add each other as friends.</li>
+			<li>Users should not receive updates of others not on their own friends list</li>
+			<li>A status update should support " " (space character)</li>
+			<li>Status of other users stored in the property "Updates" should have the user that posted the status attached to it</li>
+		</ul>
+		<h1 id="user-source"><a href="#table-of-contents">Source Code</a></h1>
+		The source code for UserServer.cpp can be found <a href="https://github.com/CorreyL/cmpt276project/blob/master/UserServer.cpp" target="_parent"><b>here</b></a>.
+		The source code for PushServer.cpp can be found <a href="https://github.com/CorreyL/cmpt276project/blob/master/PushServer.cpp" target="_parent"><b>here</b></a>.
+			</div>
+
 		</div>
 	</body>
 </html>
