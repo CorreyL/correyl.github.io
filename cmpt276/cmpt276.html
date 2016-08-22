@@ -58,20 +58,27 @@
 						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
 						<ul>
-						<li><a href="#user-introduction">Introduction</a></li>
-						<li><a href="#user-commands">List of All Commands</a></li>
-						<li><a href="#user-entity-spec">DataTable Entity Specification</a></li>
-						<li><a href="#user-command1">Command: Sign On</a></li>
-						<li><a href="#user-command2">Command: Sign Off</a></li>
-						<li><a href="#user-command3">Command: Add Friend</a></li>
-						<li><a href="#user-command4">Command: Remove Friend</a></li>
-						<li><a href="#user-command5">Command: Update Status</a></li>
-						<ul>
-							<li><a href="#push-command1">PushServer Command: Push Status to All Friends</a></li>
+							<li><a href="#user-introduction">Introduction</a></li>
+							<li><a href="#user-commands">List of All Commands</a></li>
+							<li><a href="#user-entity-spec">DataTable Entity Specification</a></li>
+							<li><a href="#user-command1">Command: Sign On</a></li>
+							<li><a href="#user-command2">Command: Sign Off</a></li>
+							<li><a href="#user-command3">Command: Add Friend</a></li>
+							<li><a href="#user-command4">Command: Remove Friend</a></li>
+							<li><a href="#user-command5">Command: Update Status</a></li>
+							<ul>
+								<li><a href="#push-command1">PushServer Command: Push Status to All Friends</a></li>
+							</ul>
+							<li><a href="#user-command6">Command: Get A User's Friend List</a></li>
+							<li><a href="#user-example1">Example Use of UserServer/PushServer</a></li>
+							<ul>
+								<li><a href="#user-example01">Sign On, Adding Friends & Removing Friends</li>
+								<li><a href="#user-example02">Updating Status</li>
+								<li><a href="#user-example03">Retrieve Friend List</li>
+								<li><a href="#user-example04">Simultaneous Users</li>
+							</ul>
 						</ul>
-						<li><a href="#user-command6">Command: Get A User's Friend List</a></li>
-						<li><a href="#user-example1">Example Use of UserServer/PushServer</a></li>
-						</ul>
+						<li><a href="#limits">Limitations of the Service</a></li>
 				</table>
 			</div>
 			</body>
@@ -1331,7 +1338,8 @@
 					<td>Quin,Tegan</td>
 					<td>
 						Friends:</br>
-						Status:
+						Status:</br>
+						Updates:
 					</td>
 				</tr>
 				<tr>
@@ -1339,7 +1347,8 @@
 					<td>Quin,Sara</td>
 					<td>
 						Friends:</br>
-						Status:
+						Status:</br>
+						Updates:
 					</td>
 				</tr>
 				<tr>
@@ -1347,7 +1356,8 @@
 					<td>Denton,Alexandra</td>
 					<td>
 						Friends:</br>
-						Status:
+						Status:</br>
+						Updates:
 					</td>
 				</tr>
 				<tr>
@@ -1355,7 +1365,8 @@
 					<td>Banks,Jillian</td>
 					<td>
 						Friends:</br>
-						Status:
+						Status:</br>
+						Updates:
 					</td>
 				</tr>
 				</table>
@@ -1391,23 +1402,33 @@
 	{"Friends":"","Partition":"Canada","Row":"Quin,Tegan","Status":""},
 	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
 	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
-			The users also need to be registered in order to use the service, thus lets say Tegan Quin registered for the service, with the Username: Tegan_Quin, and Password: LY2D. A registration would result in an entity being placed in AuthTable:
-			<pre>	
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Tegan_Quin/ -d '{"Password":"LY2D","DataPartition":"Canada","DataRow":"Quin,Tegan"}' -H "Content-Type: application/json"
+			The users also need to be registered in order to use the service. For the purposes of this example, lets say Tegan & Sara Quin are the only ones who will be making calls to the service, thus they register with the credentials:</br>
+			<ul>
+				<li>Username: Tegan_Quin & Password: LY2D</li>
+				<li>Username: Sara_Quin & Password: Heartthrob</li>
+			</ul>
+			A registration would result in an entity being placed in AuthTable:
+			<pre>	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Tegan_Quin/ -d '{"Password":"LY2D","DataPartition":"Canada","DataRow":"Quin,Tegan"}' -H "Content-Type: application/json"
 	HTTP/1.1 200 OK
 	Content-Length: 0
-
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Sara_Quin/ -d '{"Password":"Heartthrob","DataPartition":"Canada","DataRow":"Quin,Sara"}' -H "Content-Type: application/json"
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh AuthTable
 	HTTP/1.1 200 OK
-	Content-Length: 213
+	Content-Length: 325
 	Content-Type: application/json
-	[{"DataPartition":"Canada","DataRow":"Quin,Tegan","Partition":"Userid","Password":"LY2D","Row":"Tegan_Quin"}]</pre>
+	[{"DataPartition":"Canada","DataRow":"Quin,Sara","Partition":"Userid","Password":"Heartthrob","Row":"Sara_Quin"},
+	{"DataPartition":"Canada","DataRow":"Quin,Tegan","Partition":"Userid","Password":"LY2D","Row":"Tegan_Quin"}]</pre>
+	<h1 id="user-example01"><a href="#table-of-contents">Sign On, Adding Friends & Removing Friends</a></h1>
 			Let's say Tegan_Quin tried to add a friend without being signed on:
 			<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/Canada/Quin,Sara
 	HTTP/1.1 403 Forbidden
 	Content-Length: 0</pre>
-			Realistically, a user would not be able to access to any buttons that would send this command without first signing into the service, but this was for the purpose of demonstrating the authorization step of the service.</br></br>
+			Realistically, a user would not be able to access any calls to the service without first signing into the service, but this was for the purpose of demonstrating the authorization step of the service.</br></br>
 			Let's try that again, but this time we'll sign on first:
 			<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X post http://localhost:34572/SignOn/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json";
@@ -1433,13 +1454,11 @@
 	HTTP/1.1 200 OK
 	Content-Length: 0
 	
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/United_Sta
-	tes/Banks,Jillian
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/United_States/Banks,Jillian
 	HTTP/1.1 200 OK
 	Content-Length: 0
 
-	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UnFriend/Tegan_Quin/Canada/Quin
-	,Sara
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UnFriend/Tegan_Quin/Canada/Quin,Sara
 	HTTP/1.1 200 OK
 	Content-Length: 0
 
@@ -1451,7 +1470,7 @@
 	{<b class="arg1">"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian"</b>,"Partition":"Canada","Row":"Quin,Tegan","Status":""},
 	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
 	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
-			</div>
+		<h1 id="user-example02"><a href="#table-of-contents">Updating Status</a></h1>
 			Now lets say Tegan_Quin updates her status:
 			<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UpdateStatus/Tegan_Quin/"Hello_World!"
@@ -1466,6 +1485,86 @@
 	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian","Partition":"Canada","Row":"Quin,Tegan",<b class="arg1">"Status":"Hello_World!"</b>},
 	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"",<b class="arg1">"Updates":"Hello_World!\n"</b>},
 	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"",<b class="arg1">"Updates":"Hello_World!\n"</b>}]</pre>
+	<h1 id="user-example03"><a href="#table-of-contents">Retrieving All Friends</a></h1>
+		Finally, let's say Tegan_Quin wanted to retrieve her current friend list:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34572/ReadFriendList/Tegan_Quin/
+	HTTP/1.1 200 OK
+	Content-Length: 73
+	Content-Type: application/json
+
+	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian"}</pre>
+	<h1 id="user-example04"><a href="#table-of-contents">Simultaneous Users</a></h1>
+	Finally, to demonstrate that the service can handle simultaneous users, let's say:
+	<ol>
+		<li>Sara Quin signs on to the service</li>
+		<li>Sara Quin adds Tegan Quin as a friend</li>
+	<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X post http://localhost:34572/<b class="arg1">SignOn/Sara_Quin/</b> -d '{"Passwo
+	rd":"Heartthrob"}' -H "Content-Type: application/json";
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/<b class="arg1">AddFriend/Sara_Quin/Canada/Quin,Tegan</b>
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 433
+	Content-Type: application/json
+
+	[{<b class="arg1">"Friends":"Canada;Quin,Tegan","Partition":"Canada","Row":"Quin,Sara","Status":""</b>},
+	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian","Partition":"Canada","Row":"Quin,Tegan","Status":"Hello_World!"},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"","Updates":"Hello_World!\n"},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"","Updates":"Hello_World!\n"}]</pre>
+		<li>Tegan Quin adds Sara Quin as a friend</li>
+		<pre>
+	curl -i -X put http://localhost:34572/<b class="arg1">AddFriend/Tegan_Quin/Canada/Quin,Sara</b>
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 433
+	Content-Type: application/json
+	
+	[{"Friends":"Canada;Quin,Tegan","Partition":"Canada","Row":"Quin,Sara","Status":""},	
+	{<b class="arg1">"Friends"</b>:"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian|<b class="arg1">Canada;Quin,Sara"</b>,"Partition":"Canada",<b class="arg1">"Row":"Quin,Tegan"</b>,"Status":"Hello_World!"},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"","Updates":"Hello_World!\n"},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"","Updates":"Hello_World!\n"}]</pre>
+		<li>Sara Quin updates her status with "I'm_new_here!"</li>
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UpdateStatus/Sara_Quin/"I'm_new_here!"
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 492
+	Content-Type: application/json
+	[<b class="arg1">{"Friends":"Canada;Quin,Tegan","Partition":"Canada","Row":"Quin,Sara","Status":"I'm_new_here!"}</b>,
+	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian|Canada;Quin,Sara","Partition":"Canada","Row":"Quin,Tegan","Status":"Hello_World!",<b class="arg1">"Updates":"I'm_new_here!\n"</b>},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"","Updates":"Hello_World!\n"},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"","Updates":"Hello_World!\n"}]</pre>
+		<li>Tegan Quin updates her status with "Why_can't_I_use_spacebar_=("</li>
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UpdateStatus/Tegan_Quin/"Why_can't_I_use_spacebar_=("
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 621
+	Content-Type: application/json
+	[{"Friends":"Canada;Quin,Tegan","Partition":"Canada","Row":"Quin,Sara","Status":"I'm_new_here!",<b class="arg1">"Updates":"Why_can't_I_use_spacebar_=(\n"</b>},
+	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian|Canada;Quin,Sara","Partition":"Canada",<b class="arg1">"Row":"Quin,Tegan","Status":"Why_can't_I_use_spacebar_=("</b>,"Updates":"I'm_new_here!\n"},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"","Updates":"Hello_World!\n<b class="arg1">Why_can't_I_use_spacebar_=(\n</b>"},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"","Updates":"Hello_World!\n<b class="arg1">Why_can't_I_use_spacebar_=(\n</b>"}]</pre>
+	</ol>
+			</div>
+		<h2 id="limits">Limitations of the Service</h2>
+		
 		</div>
 	</body>
 </html>
