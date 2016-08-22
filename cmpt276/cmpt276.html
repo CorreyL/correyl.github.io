@@ -483,7 +483,7 @@
 			<h1 id="auth-introduction"><a href="#table-of-contents">Introduction</a></h1>
 			The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 			This authorization server provides the authorization service. Clients submit a name and password. If the name and password match the values stored in the special table AuthTable, the authentication server asks Azure to generate an access token for that user. This token will allow the user to read or update exactly one entity in one table. Tokens are only good for 24 hours after they are issued.
-			<h1 id="auth-server">Authentication Server</h1>
+			<h1 id="auth-server"><a href="#table-of-contents">Authentication Server</a></h1>
 			In order to keep track of the registered username & password combinations, we created a separate Microsoft Azure table named AuthTable, which has the following attributes:</br></br>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>AuthTable</b>
@@ -812,9 +812,11 @@
 					<li>Properties:</li>
 					<ul>
 						<li>"Friends":"(Friend01's Country);(Friend01's Last Name),(Friend01's First Name)|(Friend02's Country);(Friend02's Last Name),(Friend02's First Name)|..."</li>
+						<li>"Status":"(Most recent status update)"</li>
+						<li>"Updates":"(First Status Update received)\n(Second Status Update Received)\n..."
 					</ul>
 				</ul>
-			</div>
+			</div></br>
 			An example of this would be:
 			<div class="commandspec">
 				<ul>
@@ -823,6 +825,8 @@
 					<li>Properties:</li>
 					<ul>
 						<li>"Friends":"Canada;Quin,Sara|United_Kingdom;Denton,Alexandra"</li>
+						<li>"Status":"Hello_World!"</li>
+						<li>"Updates":"Check_out_this_awesome_photo!\nI_love_this_song!\n..."
 					</ul>
 				</ul>
 			</div>
@@ -1387,11 +1391,81 @@
 	{"Friends":"","Partition":"Canada","Row":"Quin,Tegan","Status":""},
 	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
 	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
-			Let's say Tegan Quin wanted to add Sara Quin as a friend, but was not signed on:
+			The users also need to be registered in order to use the service, thus lets say Tegan Quin registered for the service, with the Username: Tegan_Quin, and Password: LY2D. A registration would result in an entity being placed in AuthTable:
+			<pre>	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/AuthTable/Userid/Tegan_Quin/ -d '{"Password":"LY2D","DataPartition":"Canada","DataRow":"Quin,Tegan"}' -H "Content-Type: application/json"
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh AuthTable
+	HTTP/1.1 200 OK
+	Content-Length: 213
+	Content-Type: application/json
+	[{"DataPartition":"Canada","DataRow":"Quin,Tegan","Partition":"Userid","Password":"LY2D","Row":"Tegan_Quin"}]</pre>
+			Let's say Tegan_Quin tried to add a friend without being signed on:
 			<pre>
-			
-			</pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/Canada/Quin,Sara
+	HTTP/1.1 403 Forbidden
+	Content-Length: 0</pre>
+			Realistically, a user would not be able to access to any buttons that would send this command without first signing into the service, but this was for the purpose of demonstrating the authorization step of the service.</br></br>
+			Let's try that again, but this time we'll sign on first:
+			<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X post http://localhost:34572/SignOn/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json";
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/Canada/Quin,Sara
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 308
+	Content-Type: application/json
+
+	[{"Friends":"","Partition":"Canada","Row":"Quin,Sara","Status":""},
+	{<b class="arg1">"Friends":"Canada;Quin,Sara"</b>,"Partition":"Canada","Row":"Quin,Tegan","Status":""},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
+		Now let's say Tegan_Quin adds Alexandra Denton and Jillian Banks as friends, but removes Sara Quin as a friend:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/United_Kingdom/Denton,Alexandra
+	HTTP/1.1 200 OK
+	Content-Length: 0
+	
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/AddFriend/Tegan_Quin/United_Sta
+	tes/Banks,Jillian
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UnFriend/Tegan_Quin/Canada/Quin
+	,Sara
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 351
+	Content-Type: application/json
+	[{"Friends":"","Partition":"Canada","Row":"Quin,Sara","Status":""},
+	{<b class="arg1">"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian"</b>,"Partition":"Canada","Row":"Quin,Tegan","Status":""},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":""},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":""}]</pre>
 			</div>
+			Now lets say Tegan_Quin updates her status:
+			<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34572/UpdateStatus/Tegan_Quin/"Hello_World!"
+	HTTP/1.1 200 OK
+	Content-Length: 0
+
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ ./dumptable.sh
+	HTTP/1.1 200 OK
+	Content-Length: 417
+	Content-Type: application/json
+	[{"Friends":"","Partition":"Canada","Row":"Quin,Sara","Status":""},
+	{"Friends":"United_Kingdom;Denton,Alexandra|United_States;Banks,Jillian","Partition":"Canada","Row":"Quin,Tegan",<b class="arg1">"Status":"Hello_World!"</b>},
+	{"Friends":"","Partition":"United_Kingdom","Row":"Denton,Alexandra","Status":"",<b class="arg1">"Updates":"Hello_World!\n"</b>},
+	{"Friends":"","Partition":"United_States","Row":"Banks,Jillian","Status":"",<b class="arg1">"Updates":"Hello_World!\n"</b>}]</pre>
 		</div>
 	</body>
 </html>
