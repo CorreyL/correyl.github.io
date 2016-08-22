@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+	<head>
+		<!-- To display C++ Code -->
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushCpp.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushBash.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
+		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
+		<script type="text/javascript">SyntaxHighlighter.all();</script>
+
+		<link rel="stylesheet" type="text/css" href="../style.css"/>
+		<style type="text/css">
+		.arg1{color:red;}
+		.arg2{color:green;}
+		.arg3{color:blue;}
+		.arg4{color:orange;}
+		table{max-width: 500px;}
+		</style>
+		<title>Digital Portfolio of Correy Lim</title>
+	</head>
+	<body>
+	<h3>CMPT 379: Principles In Compiler Design (May 2016 - August 2016)</h3>
+	<div class="document">
+		<div id="table-of-contents">
+			<h2>Table of Contents</h2>
+			<body>
+			<div class="tableofcontents">
+				<table>
+					<li><a href="#preface">Preface</a></li>
+					<li><a href="#lex">Flex: Lexical Analyzer</a></li>
+					<li><a href="#parser">YACC/Bison Grammar Parser</a></li>
+					<li><a href="#codegen">LLVM Code Generation</a></li>
+					<ul>
+					</ul>
+				</table>
+			</div>
+			</body>
+		</div>
+		<h2 id="preface">Preface</h2>
+		In this course, my teammate and I were tasked with building a <a href="https://en.wikipedia.org/wiki/Compiler"><b>Compiler</b></a> for a C-like language created for the course, <a href="http://anoopsarkar.github.io/compilers-class/decafspec.html" target="_blank"><b>'Decaf'</b></a>.
+		An exercept from the Decaf Specification page:</br></br>
+		<div class="commandspec">
+		Decaf is a strongly typed C-like language. The feature set is trimmed down considerably from what is usually part of a full-fledged programming language. This is done to keep the programming assignments manageable. Despite these limitations, Decaf will be able to handle interesting and non-trivial programs.</br></br>
+		Here is an example Decaf program:
+		<pre class="brush: cpp;">
+		extern func print_int(int) void;
+
+		package GreatestCommonDivisor {
+			var a int = 10;
+			var b int = 20;
+
+			func main() int {
+				var x, y, z int;
+				x = a;
+				y = b;
+				z = gcd(x, y);
+
+				// print_int is part of the standard input-output library
+				print_int(z);
+			}
+
+			// function that computes the greatest common divisor
+			func gcd(a int, b int) int {
+				if (b == 0) { return(a); }
+				else { return( gcd(b, a % b) ); }
+			}
+		}</pre>
+		</div>
+		<h2 id="lex">Flex: Lexical Analyzer</h2>
+		<h2 id="parser">YACC/Bison Grammar Parser</h2>
+		<h2 id="codegen">LLVM Code Generation</h2>
+	</div>
+</html>
