@@ -44,7 +44,7 @@
 									<li><a href="#database-specific-example1">Get All Entities From A Specific Partition</a></li>
 									<li><a href="#database-specific-example2">Get All Entities Containing All Specified Properties</a></li>
 								</ul>
-							<li><a href="#database-conclusion">Conclusion</a></li>
+							<!-- <li><a href="#database-conclusion">Conclusion</a></li> -->
 							<li><a href="#database-source">Source Code</a></li>
 						</ul>
 					<li><a href="#authentication-layer">Authentication: Secure Record Access</a></li>
@@ -54,7 +54,7 @@
 						<li><a href="#auth-command1">Command: Get A Read Token</a></li>
 						<li><a href="#auth-command2">Command: Get An Update Token</a></li>
 						<li><a href="#auth-example1">Example Use of AuthServer</a></li>
-						<li><a href="#auth-conclusion">Conclusion</a></li>
+						<!-- <li><a href="#auth-conclusion">Conclusion</a></li> -->
 						</ul>
 					<li><a href="#session-layer">High-Level Interface: Session Layer</a></li>
 						<ul>
@@ -133,13 +133,6 @@
 		</table></br></center>
 		<p>
 			Here we have a table of artists, where the Partition specifies the role of the individual, the Row specifies the name of the individual, and the JSON object for each entity have various property pairs.</br></br>
-			It is important to know that calls to any of the servers described below are done using the Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a>. An example of a command to the database server, BasicServer, is:</br></br>
-			<code>$ curl -i -X post http://localhost:34568/CreateTableAdmin/MyTable</code></br></br>
-			Where all the servers store the passed in arguments in the variable 'paths'. As such,</br>
-			<ol>
-				<li>paths[0] == 'CreateTableAdmin'</li>
-				<li>paths[1] == 'MyTable'
-			</ol>
 			The back-end was set up as a tiered service as 4 different servers:</br>
 			<center><img src="cmpt276architecture.jpg"/></br></center>
 		</p>
@@ -179,8 +172,13 @@
 			Which is performed by the URI:</br></br>
 			<code>http://<b class=arg1>localhost</b>:<b class=arg2>34568</b>/<b class=arg3>CreateTableAdmin</b>/<b class=arg4>MyTable</b></code></br></br>
 			The server is hosted on the <b class=arg1>local machine</b>, the <b class=arg2>port number 34568</b> is specific to this server, the command is <b class=arg3>CreateTableAdmin</b> and the arugment passed in is <b class=arg4>MyTable</b>, which will generate an Azure Table named 'MyTable'.</br></br>
-			Recall that the Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
+			The Unix command <a href="https://curl.haxx.se/docs/manpage.html" target="_parent"><b>cURL</b></a> is used to make calls to the server. Put together with the HTTP Request, the cURL command to create a table is:</br></br>
 			<code>$ curl -i -X post http://localhost:34568/CreateTableAdmin/MyTable</code></br></br>
+			Note that all the servers store the passed in arguments in the variable 'paths'. As such, for BasicServer</br>
+			<ol>
+				<li>paths[0] == 'CreateTableAdmin'</li>
+				<li>paths[1] == 'MyTable'
+			</ol>
 			The following is the C++ code found in BasicServer.cpp that handles this call.
 			<!-- C++ Code for CreateTableAdmin -->
 			<pre class="brush: cpp;">
@@ -380,7 +378,7 @@
 					<td>TV Show: <a href="https://en.wikipedia.org/wiki/Jessica_Jones_(TV_series)" target="_parent">Jessica Jones</a></td>
 				</tr>
 		</table></br></center>
-		First, let's enter Partition: Musician, Row: Tegan Quin with the Properties: {Genre: Indie Pop, Band: Tegan & Sara}
+		First, let's create the table 'Artists' and enter Partition: Musician, Row: Tegan Quin with the Properties: {Genre: Indie Pop, Band: Tegan & Sara} into the table
 		<pre>
 	vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X post http://localhost:34568/CreateTableAdmin/Artists
 	HTTP/1.1 201 Created
@@ -470,10 +468,12 @@
 	{"Genre":"Electropop","Latest_Album":"Nothings_Real","Partition":"Musician","Row":"Shura"},
 	{"Band":"Tegan&Sara","Genre":"Indie Pop","Partition":"Musician","Row":"Tegan_Quin"}]</pre>
 		Since the Musicians are the only ones with the property "Genre", they were the only entities returned.
+		<!--
 		<h1 id="database-conclusion">Conclusion</h1>
 		<p>
 			While in hindsight these commands are quite simple to implement, it was the first time I worked with <a href="https://en.wikipedia.org/wiki/JSON" target="_parent"><b>JSON Objects</b></a> and a <a href="https://microsoft.github.io/cpprestsdk/annotated.html" target="_parent"><b>large C++ API</b></a>, and thus the main challenge was getting acclimated with utilizing these new tools by understanding the commands already implemented, then implementing new commands according to a set of specifications.
 		</p>
+		-->
 		</div>
 		<div class="section" id="authentication-layer">
 			<h2>2. Authentication: Secure Record Access (AuthServer.cpp)</h2>
@@ -781,7 +781,7 @@
 		<pre>
 		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X get http://localhost:34570/<b class="arg1">GetReadToken</b>/Tegan_Quin/ -d '{"Password":"LY2D"}' -H "Content-Type: application/json"</pre>
 		The difference is highlighted in red, where we call the command GetReadToken instead of GetUpdateToken.
-			<h1 id="auth-conclusion">Conclusion</h1>
+			<!-- <h1 id="auth-conclusion">Conclusion</h1> -->
 		</div>
 		<div class="section" id="session-layer">
 			<h2>3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</h2>
