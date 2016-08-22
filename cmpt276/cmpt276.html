@@ -76,9 +76,11 @@
 			</body>
 		</div>
 		<div class="section" id="preface">
-		<h2>Preface</h2>
+		<h2><a href="#table-of-contents">Preface</a></h2>
 		<p>
-			In this course I was tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.
+			In this course, my teammates and I were tasked with building a back-end for a hypothetical web-based or mobile application (such as a social network), specifically to store user-inputted data such as usernames, passwords, status updates, etc.</br></br>
+			
+			It is important to note that much of the work was split so that I was heading the implementation of the commands of the servers, where my teammates were mainly responsible for unit testing and returning the results to me to fix the implementations accordingly. Nevertheless, I wrote a few unit tests enough to familiarize myself with the process of unit testing, specifically with <a href="https://unittest-cpp.github.io/"><b>UnitTest++</b></a>.
 		</p>
 		<p>
 			The main components of the project are:
@@ -139,8 +141,8 @@
 		</div>	
 		<div class="section" id="database-layer">
 			<p>
-				<h2>1. Low-Level Interface: Database Layer (BasicServer.cpp)</h2>
-				<h1 id="database-introduction">Introduction</h1>
+				<h2><a href="#table-of-contents">1. Low-Level Interface: Database Layer (BasicServer.cpp)</a></h2>
+				<h1 id="database-introduction"><a href="#table-of-contents">Introduction</a></h1>
 				The Database Layer is an interface to the Storage Layer, specifically <a href="https://azure.microsoft.com/en-us/" target="_parent"><b>Microsoft Azure</b></a>. This ensures that if the application needs to be moved to another Cloud Storage Service, such as <a href="https://aws.amazon.com/?nc2=h_lg" target="_parent"><b>Amazon AWS</b></a> or <a href="https://cloud.google.com/" target="_parent"><b>Google Cloud Datastore</b></a>, the only code that needs to be changed would be in this lowest-level service, without having to change any other part of the appllication.</br></br>
 				
 				Calls to the Database Layer have two parts: An HTTP Request Method and a URI. The service supports 4 basic HTTP request methods: </br>
@@ -152,7 +154,7 @@
 				</ul>
 				The URI specifies the server being called, the command, and any corresponding arguments required by the command, possibly including a <a href="http://www.json.org/"><b>JSON Object</b></a>.
 			</p>
-			<h1 id="database-example1">Example of A Call to the Server</h1>
+			<h1 id="database-example1"><a href="#table-of-contents">Example of A Call to the Server</a></h1>
 			The simplest command to demonstrate a call to the server is 'CreateTableAdmin', the specifications of which are as follows:</br></br>
 			<div class ="commandspec" style="margin-left: 1em;"> <!-- Change the class so that it doesn't go across the width of the page. -->
 				<b>Create A Table</b>
@@ -214,7 +216,7 @@
 			}</pre>
 			The list of all commands in BasicServer can be found <a href="database-layer-commands.html" target="_blank" id="database-commands"><b>here</b></a>.</br></br>
 			From the list above, we were tasked with implementing two commands in the Database Layer:
-			<h1 id="database-command1">Get All Entities From A Specific Partition</h1>
+			<h1 id="database-command1"><a href="#table-of-contents">Get All Entities From A Specific Partition</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>Get All Entities From A Specific Partition</b>
 				<ul>
@@ -259,7 +261,7 @@
 				message.reply(status_codes::OK, value::array(key_vec));
 				return;
 			}</pre>
-			<h1 id="database-command2">Get All Entities Containing All Specified Properties</h1>
+			<h1 id="database-command2"><a href="#table-of-contents">Get All Entities Containing All Specified Properties</a></h1>
 			<div class="commandspec" id="database-command2" style="margin-left: 1em;">
 			<b>Get All Entities Containing All Specified Properties</b>
 			<ul>
@@ -338,7 +340,7 @@
 					return;
 				}
 			}</pre>
-			<h1 id="database-example2">Example Use of BasicServer</h1>
+			<h1 id="database-example2"><a href="#table-of-contents">Example Use of BasicServer</a></h1>
 			Here is an example of entering the entities from the example table shown in the Preface
 			<center><table style="width:70%" border="1">
 				<tr>
@@ -476,8 +478,8 @@
 		-->
 		</div>
 		<div class="section" id="authentication-layer">
-			<h2>2. Authentication: Secure Record Access (AuthServer.cpp)</h2>
-			<h1 id="auth-introduction">Introduction</h1>
+			<h2><a href="#table-of-contents">2. Authentication: Secure Record Access (AuthServer.cpp)</a></h2>
+			<h1 id="auth-introduction"><a href="#table-of-contents">Introduction</a></h1>
 			The basics of security for a cloud-based application were covered here, ensuring authenticated access to the service. Registered users required a username and associated password, and they were stored in a separate table in Microsoft Azure.</br></br>
 			This authorization server provides the authorization service. Clients submit a name and password. If the name and password match the values stored in the special table AuthTable, the authentication server asks Azure to generate an access token for that user. This token will allow the user to read or update exactly one entity in one table. Tokens are only good for 24 hours after they are issued.
 			<h1 id="auth-server">Authentication Server</h1>
@@ -505,7 +507,7 @@
 				<li><a href="#auth-command1"><b>Get A Read Token</b></a></li>
 				<li><a href="#auth-command2"><b>Get An Update Token</b></a></li>
 			</ol>
-			<h1 id="auth-command1">Get A Read Token</h1>
+			<h1 id="auth-command1"><a href="#table-of-contents">Get A Read Token</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A Read Token</b>
 			<ul>
@@ -641,7 +643,7 @@
 				return;
 			}
 			</pre>
-			<h1 id="auth-command2">Get An Update Token</h1>
+			<h1 id="auth-command2"><a href="#table-of-contents">Get An Update Token</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>Get An Update Token</b>
 				<p>This operation has the same specification as <a href="#auth-command1"><b>"Get A Read Token"</b></a>, except for the following:</p>
@@ -731,7 +733,7 @@
 						++it;
 					}
 				}</pre>
-			<h1 id="auth-example1">Example Use of AuthServer</h1>
+			<h1 id="auth-example1"><a href="#table-of-contents">Example Use of AuthServer</a></h1>
 			We'll stick with the example of the entity Partition: Musician, Row: Tegan_Quin. First, we need to add this to entity to DataTable:
 			<pre>
 		vagrant@vagrant-ubuntu-trusty-32:~/cmpt276-projects/assign1$ curl -i -X put http://localhost:34568/UpdateEntityAdmin/DataTable/Musician/Tegan_Quin/ -d '{"Genre":"Indie Pop","Band":"Tegan & Sara"}' -H "Content-Type: application/json"
@@ -784,8 +786,9 @@
 			<!-- <h1 id="auth-conclusion">Conclusion</h1> -->
 		</div>
 		<div class="section" id="session-layer">
-			<h2>3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</h2>
+			<h2><a href="#table-of-contents">3. High-Level Interface: Session Layer (UserServer.cpp & PushServer.cpp)</a></h2>
 			<div id="user-introduction">
+				<h1><a href="#table-of-contents">Introduction</a></h1>
 				This part of the project calls the services of BasicServer and AuthServer. There are two servers:
 				<ul>
 					<li>UserServer: A service for managing a user's social networking session</li>
@@ -799,7 +802,7 @@
 													   const value& req_body)</pre>
 				A list of all the commands in UserServer and PushServer can be found <a href="user-layer-commands.html" target="_blank" id="user-commands"><b>here</b></a>.
 			</div>
-			<h1 id="user-entity-spec">DataTable Entry Specification</h1>
+			<h1 id="user-entity-spec"><a href="#table-of-contents">DataTable Entry Specification</a></h1>
 			To ensure consistency when storing user information, entities in DataTable are entered according to the following set of specifications:
 			<div class="commandspec">
 				<ul>
@@ -822,7 +825,7 @@
 					</ul>
 				</ul>
 			</div>
-			<h1 id="user-command1">Sign On</h1>
+			<h1 id="user-command1"><a href="#table-of-contents">Sign On</a></h1>
 			As with any social network, a client is first required to sign on before they are able to use any of the services.</br></br>
 			<div class="commandspec" style="margin-left: 1em;">
 				<b>Sign On</b>
@@ -925,7 +928,7 @@
 					return;
 				}</pre>
 				
-			<h1 id="user-command2">Sign Off</h1>
+			<h1 id="user-command2"><a href="#table-of-contents">Sign Off</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Sign Off</b>
 			<ul>
@@ -947,7 +950,7 @@
 				message.reply(status_codes::OK);
 				return;
 			}</pre>
-			<h1 id="user-command3">Add Friend</h1>
+			<h1 id="user-command3"><a href="#table-of-contents">Add Friend</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Add Friend</b>
 			<ul>
@@ -1018,7 +1021,7 @@
 					message.reply(add_friend_result);
 					return;
 				}</pre>
-			<h1 id="user-command4">Remove Friend</h1>
+			<h1 id="user-command4"><a href="#table-of-contents">Remove Friend</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Unfriend</b>
 			<ul>
@@ -1091,7 +1094,7 @@
 				message.reply(unfriend_result);
 				return;
 			}</pre>
-			<h1 id="user-command5">Update Status</h1>
+			<h1 id="user-command5"><a href="#table-of-contents">Update Status</a></h1>
 			We first obtain the friends list in the same way we did for Add Friend and Remove Friend, building it into a JSON Object:
 			<pre class="brush: cpp;">
 			if( active_users.find(paths[1]) == active_users.end() ){ // User is not signed in
@@ -1126,7 +1129,7 @@
 			pair&lt;status_code,value> push_status_result = do_request( methods::POST, push_addr + push_status + "/" + active_users[paths[1]][1] + "/" + active_users[paths[1]][2] + "/" + paths[2], props );</pre>
 			This executes the only command found in PushServer,
 			<div class="commandspec" style="margin-left: 1em;" id="push-command1">
-				<b>Push Status Update To All Friends of This User</b>
+				<b><a href="#table-of-contents">Push Status Update To All Friends of This User</a></b>
 				<ul>
 					<li>HTTP method: POST</li>
 					<li>Operation: PushStatus</li>
@@ -1188,6 +1191,8 @@
 					return;</pre>
 				Next we make a call to BasicServer to retrieve the contents stored in the property "Updates" as a string.</br>
 				<pre class="brush: cpp;">
+				while( !done ){
+					// ...
 					pair&lt;status_code,value> get_result { get_partition_entity(basic_addr, DataTable, current_country, current_name) };
 					if( get_result.first == status_codes::OK ){ // If not OK, then the entity does not exist
 						for ( const auto& v : get_result.second.as_object() ){
@@ -1200,7 +1205,8 @@
 						done = true;
 					}
 					all_friends.erase( 0, all_friends.find("|")+1 );
-					current_friend = all_friends.substr(0, all_friends.find("|"));</pre>
+					current_friend = all_friends.substr(0, all_friends.find("|"));
+				}</pre>
 				If the contents are empty, then we just need to update the entity's "Update" content with the new status.</br>
 				Otherwise, we need to concatenate the entity's current "Update" content with the new status:
 				<pre class="brush: cpp;">
@@ -1271,7 +1277,7 @@
 							message.reply(status_codes::OK);
 							return;
 					}</pre>
-			<h1 id="user-command6">Get A User's Friend List</h1>
+			<h1 id="user-command6"><a href="#table-of-contents">Get A User's Friend List</a></h1>
 			<div class="commandspec" style="margin-left: 1em;">
 			<b>Get A User's Friend List</b>
 			<ul>
@@ -1286,7 +1292,7 @@
 				</ul>
 			</ul>
 			</div></br>
-			We start in the same manner we retrieve the current friend list in 'Add Friend' and 'Remove Friend' (check that the user is logged in, and use get_entity_auth() to retrieve the friend list), only we need not alter the friend list in any way, just pass it back as a JSON Object:
+			We start in the same manner we retrieve the current friend list in 'Add Friend' and 'Remove Friend' (check that the user is logged in, and use get_entity_auth() to retrieve the friend list), only we need not alter the friend list in any way, just pass it back as a JSON Object. The full source code for this command is as follows:
 			<pre class="brush: cpp;">
 			if( active_users.find(paths[1]) == active_users.end() ){
 				message.reply(status_codes::Forbidden);
