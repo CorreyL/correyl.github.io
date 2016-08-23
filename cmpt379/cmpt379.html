@@ -97,11 +97,38 @@
 			<code>[^a-zA-Z]</code> : Any characters that are NOT Lower & Uppercase Alphabetic characters ([^ ] : Any characters but the ones that follow) </br></br>
 			<code>[a-zA-Z0-9]</code> : Alphanumeric characters</br></br>
 			<code>(a|b)*</code> : Any number of the letters a or b in any order, or the empty string "" (* : Kleene Closure matches the preceding element(s) zero or more times)</br></br>
-			<code>(a|b)*c</code> : Starting with any number of the letters a or b in any order, or the empty string "", and ends with the letter c</br>
-			
+			<code>(a|b)*c</code> : Starting with any number of the letters a or b in any order, or the empty string "", and ends with the letter c</br></br>
+			The topic of regular expressions is a broad subject, and the above barely scratches the surface of what they're capable of.</br>
 			<h1 id="lex_decaf"><a href="#table-of-contents">Lexical Analyzer for Decaf</a></h1>
-			The topic of regular expressions is a broad subject, and the above barely scratches the surface of what they're capable of.</br></br>
-			
+			Flex builds upon the the programming language C. The basic structure of a Flex program is demonstrated below:
+			<pre class="brush: cpp;">
+			%{ // Indicates to Flex that C syntax is going to be enclosed inside the {}
+
+			#include &lt;iostream>
+			using namespace std;
+			int mylineno = 0;
+
+			%}
+
+			%option noyywrap // A Flex option to toggle a specific setting
+
+			// Defining Regular Expressions into variables for use below
+			string  \"[^\n"]+\" 
+			alpha   [A-Za-z]
+			dig     [0-9]
+
+			%% // Indicates to Flex that the definition section of the program is ending, and the token definition section is beginning
+
+			// Regular Expression         C Syntax to process the corresponding Regular Expression
+			[{alpha}\_][{alpha}\_{dig}]*  { yylval.sval = new string(yytext); return T_ID; }
+			{dig}{dig}*					  { yylval.number = conv_intconstant(yytext); return T_INTCONSTANT; }
+			 
+			%% // Indicates to Flex that the token definitions section is ending, and the main program is beginning
+
+			int yyerror(const char *s) {
+				cerr << lineno << ": " << s << " at char " << tokenpos << endl;
+				return 1;
+			}</pre>
 			The main challenge of building a Lexical Analyzer was following the <a href="http://anoopsarkar.github.io/compilers-class/decafspec.html" target="_blank"><b>Decaf Specification</b></a> and building regular expressions for the following tokens:</br>
 			<pre>
 	T_AND            &&
@@ -154,7 +181,7 @@
 	T_VOID           void
 	T_WHILE          while
 	T_WHITESPACE     whitespace (see section on Whitespace)</pre>
-	Of course, building regular expressions for some of the above are easier than others. Below are a few samples, ranging from the easier ones to the harder ones.
+	Building regular expressions for some of the above are easier than others. Below are a few samples, ranging from the easier ones to the harder ones.
 	<ol>
 		<li><b>Reserved Keywords</b></br>
 			As one would expect, the regular expression for these tokens are the same as when typed in decaf, as such:
@@ -227,7 +254,7 @@
 					return atoi(yytext);
 				}
 			}</pre>
-			Which determines what character is being escaped, and returning the corresponding ASCII value of the character.
+			Which determines what character is being escaped, and returning the corresponding ASCII integer value of the character.
 		</li></br>
 		<li>
 			<b>Escaped Characters In String Literals</b></br>
@@ -320,9 +347,10 @@
 		1 * 2 + F -> 1 * 2 + 3 (Rule 3)</pre>
 		The resulting tree from this grammar would be:</br>
 		<img src="ast_example.png"/>
-		<h1 id="parser_grammar">Grammar Parser for Decaf</h1>
+		<h1 id="parser_grammar"><a href="#table-of-contents">Grammar Parser for Decaf</a></h1>
 		
 		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
+		The source code for the Grammar Parser for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
 			<h2 id="codegen">LLVM Code Generation</h2>
