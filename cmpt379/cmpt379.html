@@ -431,7 +431,7 @@
 			std::string *sval;
 		}
 
-		%token <sval> T_ID
+		%token &lt;sval> T_ID
 		%token T_INTCONSTANT
 		%token T_ASSIGN
 		%token T_SEMICOLON
@@ -477,7 +477,80 @@
 		<pre class="brush: cpp;">
 		AssignVarAST(x, 10);</pre>
 		Then the returned string would be:</br></br>
-		<code>AssignVar(x,10)</code>
+		<code>AssignVar(x,10)</code></br></br>
+		Notable challenges when implementing the Grammar Parser was handling multiple ways to define the same action. For example, as is valid in C++, Decaf supports typecasting multiple variables in one line, in addition to other variable declarations on separate lines, like so:
+		<pre class="brush: cpp;">
+		var a bool;
+		var b int;
+		var x, y, z int // The equivalent of int x,y,z in C/C++</pre>
+		Handling the multiple lines of variable definitions require utilizing the class decafStmtList, which is a list of Decaf ASTs:
+		<pre class="brush: cpp;">
+		class decafStmtList : public decafAST {
+			list&lt;decafAST *> stmts;
+			public:
+				decafStmtList() {}
+				~decafStmtList() {
+					for (list&lt;decafAST *>::iterator i = stmts.begin(); i != stmts.end(); i++) {
+						delete *i;
+					}
+				}
+				int size() { return stmts.size(); }
+				void push_front(decafAST *e) { stmts.push_front(e); }
+				void push_back(decafAST *e) { stmts.push_back(e); }
+				string str() { return commaList&lt;class decafAST *>(stmts); }
+		};
+		
+		// ...
+		
+		field_decl_list: field_decl_list field_decl // Notice how this expression is left recursive
+			{ decafStmtList *slist = (decafStmtList *)$1; slist->push_back($2); $$ = slist; }
+		| /* empty */
+			{ decafStmtList *slist = new decafStmtList(); $$ = slist; }
+		;</pre>
+		Then to handle multiple variable definitions on the same line, we needed to create a new class, IdList:
+		<pre class="brush: cpp;">
+		class IdList : public decafAST {
+			list&lt;class decafAST *> Vars;
+			string Type;
+			int Size;
+
+			public:
+				IdList(){}
+				IdList(string name, string type, int size){
+					Type = type;
+					Size = size;
+					FieldDeclAST *temp = new FieldDeclAST(name, Type, Size);
+					Vars.push_front(temp);
+				}
+				~IdList(){}
+
+				void push_front(string name, string type, int size){
+					FieldDeclAST *temp = new FieldDeclAST(name, type, size);
+					Vars.push_front(temp);
+				}
+				void push_back(string name, string type, int size){
+					FieldDeclAST *temp = new FieldDeclAST(name, type, size);
+					Vars.push_back(temp);
+				}
+				void addVar(string name) {
+					FieldDeclAST *temp = new FieldDeclAST(name, Type, Size);
+					Vars.push_front(temp);
+				}
+				virtual llvm::Value* Codegen();
+				string str(){ return commaList&lt;class decafAST *>(Vars);}
+		};
+		
+		// ... 
+		
+		field_decl: T_VAR id_list T_SEMICOLON { $$ = $2; } // Notice how the actual variable names are not defined in this expression, but a separate expression, id_list, instead
+
+		id_list: T_ID decaf_type { // The parser reads from right to left, so we instantiate the list here, and push on to it every variable declared on the same line
+				$$ = new IdList(*$1, *$2, -1); 
+			}
+			| T_ID T_COMMA id_list { 
+					IdList *temp = (IdList*)$3;
+					temp->addVar(*$1); $$ = temp;
+			}</pre>
 		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
 		The source code for the Grammar Parser for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
