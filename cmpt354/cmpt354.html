@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushCpp.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushBash.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
+		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
+		<script type="text/javascript">SyntaxHighlighter.all();</script>
+		
+		<link rel="stylesheet" type="text/css" href="../style.css"/>
+		<style type="text/css">
+			.arg1{color:red;}
+			.arg2{color:green;}
+			.arg3{color:blue;}
+			.arg4{color:orange;}
+			table{max-width: 500px;}
+		</style>
+		<title>Digital Portfolio of Correy Lim</title>
+	</head>
+	<body>
+	<div class="document">
+		<h3>Client-SQL Server Interface Project</h3>
+		<div id="table-of-contents">
+			<h2>Table of Contents</h2>
+			<div class="tableofcontents">
+				<li><a href="#preface">Preface</a></li>
+			</div>
+		</div>
+		<div id="preface">
+			<h2>Preface</h2>
+			In this project, I was assigned to use the skills gained in writing SQL query from the course and combine it with a programming language of my choice to build a simple Client-Server Interface.</br></br>
+			
+			The database that information is being retrieved from is the <a href="https://awlt2008dbscript.codeplex.com/"><b>AdventureWorks Database</b></a>. More specifically, we needed to retrieve four pieces of information from customers who bought products of the inputted color, including
+			<ol>
+				<li>CustomerID</li>
+				<li>First Name</li>
+				<li>Last Name</li>
+				<li>Highest Price (Ie. The most amount of money that customer spent on a product of the inputted color)</li>
+			</ol>
+			We were tasked with looking into the way AdventureWorksLT stored the data in order to retrieve this information. I discovered that the architecture of the database required a Natural Join on four of the tables in the database:
+			<ol>
+				<li>AdventureWorksLT.SalesLT.Product</br><img src="cmpt354-Product.png"></li>
+				<li>AdventureWorksLT.SalesLT.Customer</br><img src="cmpt354-Customer.png"></li>
+				<li>AdventureWorksLT.SalesLT.SalesOrderHeader</br><img src="cmpt354-SalesOrderHeader.png"></li>
+				<li>AdventureWorksLT.SalesLT.SalesOrderDetail</br><img src="cmpt354-SalesOrderDetail.png"></li>
+			</ol>
+			The client is set to prompt the user to input a color of their chosing, which
+		</div>
+	</div>
+	</body>
+</html>
