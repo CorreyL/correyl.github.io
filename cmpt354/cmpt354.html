@@ -4,9 +4,8 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<script type="text/javascript" src="../syntax_highlighter/scripts/shCore.js"></script>
-		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushCpp.js"></script>
-		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushBash.js"></script>
-		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPlain.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushSql.js"></script>
+		<script type="text/javascript" src="../syntax_highlighter/scripts/shBrushPython.js"></script>
 		<link type="text/css" rel="stylesheet" href="../syntax_highlighter/styles/shCoreDefault.css"/>
 		<script type="text/javascript">SyntaxHighlighter.all();</script>
 		
@@ -27,27 +26,96 @@
 			<h2>Table of Contents</h2>
 			<div class="tableofcontents">
 				<li><a href="#preface">Preface</a></li>
+				<li><a href="#sql_server">SQL Server: Views</a></li>
+				<li><a href="#client">Client-Side Infrastructure</a></li>
+				<ul>
+					<li><a href="#python">Python</a></li>
+				</ul>
 			</div>
 		</div>
 		<div id="preface">
 			<h2>Preface</h2>
-			In this project, I was assigned to use the skills gained in writing SQL query from the course and combine it with a programming language of my choice to build a simple Client-Server Interface.</br></br>
+			In this project, I was assigned to use the skills gained in writing SQL queries from the course and combine it with a programming language of my choice to build a simple Client-Server Interface.</br></br>
 			
-			The database that information is being retrieved from is the <a href="https://awlt2008dbscript.codeplex.com/"><b>AdventureWorks Database</b></a>. More specifically, we needed to retrieve four pieces of information from customers who bought products of the inputted color, including
+			The client needed to prompt the user to input a color, choosing from a list of colors that were associated with the products being sold.</br></br>
+			
+			The database that information is being retrieved from is the <a href="https://awlt2008dbscript.codeplex.com/"><b>AdventureWorksLT Database</b></a>. More specifically, I needed to retrieve four pieces of information from customers who bought products of the inputted color, including
 			<ol>
 				<li>CustomerID</li>
 				<li>First Name</li>
 				<li>Last Name</li>
 				<li>Highest Price (Ie. The most amount of money that customer spent on a product of the inputted color)</li>
 			</ol>
-			We were tasked with looking into the way AdventureWorksLT stored the data in order to retrieve this information. I discovered that the architecture of the database required a Natural Join on four of the tables in the database:
+			I was tasked with looking into the way AdventureWorksLT stored the data in order to retrieve this information, discovering that the architecture of the database required a natural join on four of the tables in the database:
 			<ol>
 				<li>AdventureWorksLT.SalesLT.Product</br><img src="cmpt354-Product.png"></li>
 				<li>AdventureWorksLT.SalesLT.Customer</br><img src="cmpt354-Customer.png"></li>
 				<li>AdventureWorksLT.SalesLT.SalesOrderHeader</br><img src="cmpt354-SalesOrderHeader.png"></li>
 				<li>AdventureWorksLT.SalesLT.SalesOrderDetail</br><img src="cmpt354-SalesOrderDetail.png"></li>
 			</ol>
-			The client is set to prompt the user to input a color of their chosing, which
+		</div>
+		<h2 id="sql_server">SQL Server Views</h2>
+		<div class="section">
+			From the tables shown above, in order to retrieve the four pieces of information required, the SELECT-FROM-WHERE SQL Query needed to be:
+			<pre class="brush: sql;">
+				SELECT C.CustomerID AS CustomerID, C.FirstName AS FirstName, C.LastName AS LastName, MAX(SD.UnitPrice) AS HighestPrice
+				FROM AdventureWorksLT.SalesLT.Customer C, AdventureWorksLT.SalesLT.Product P, AdventureWorksLT.SalesLT.SalesOrderHeader SH, AdventureWorksLT.SalesLT.SalesOrderDetail SD
+				WHERE C.CustomerID = SH.CustomerID AND SH.SalesOrderID = SD.SalesOrderID AND P.ProductID = SD.ProductID AND P.Color = ''%s'' /* The color inputted from the client */
+				GROUP BY C.CustomerID, C.FirstName, C.LastName' /* In order to use the function MAX() in the SELECT clause*/</pre>
+			In order to save the SQL Server from having to redundantly process the same query, the client was set to only perform the above SELECT-FROM-WHERE query if a view for the color did not already exist, thus:
+			<pre class="brush: sql;">
+			IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='%s' AND xtype='V')
+			BEGIN
+			EXEC('CREATE VIEW %s AS
+			SELECT C.CustomerID AS CustomerID, C.FirstName AS FirstName, C.LastName AS LastName, MAX(SD.UnitPrice) AS HighestPrice
+			FROM AdventureWorksLT.SalesLT.Customer C, AdventureWorksLT.SalesLT.Product P, AdventureWorksLT.SalesLT.SalesOrderHeader SH, AdventureWorksLT.SalesLT.SalesOrderDetail SD
+			WHERE C.CustomerID = SH.CustomerID AND SH.SalesOrderID = SD.SalesOrderID AND P.ProductID = SD.ProductID AND P.Color = ''%s''
+			GROUP BY C.CustomerID, C.FirstName, C.LastName')
+			END</pre>
+		</div>
+		<h2 id="client">Client-Side Infrastructure</h2>
+		<div class="section">
+			<h1 id="python">Python</h1>
+			I decided that Python would be the easiest language to use to build the client interface, since the documentation on the the module <a href="http://www.pymssql.org/en/latest/"><b>PyMSSql</b></a> was easy to understand, and the SQL queries were small enough that I did not have to worry about client-side performance being a bottleneck, what with Python being an <a href="https://en.wikipedia.org/wiki/Interpreted_language">interpreted language</a>.
+			
+			We begin the program by declaring any server information needed to connect into variables, alongside any future variables we may need to call on:
+			<pre class="brush: py;">
+			import pymssql
+			# Initial Variable Declarations
+			host = 'cypress.csil.sfu.ca' # The information needed for the function pymssql.connect() to work correctly
+			user = 's_correyl'
+			password = 'fR6hfN3h6eYydteh'
+			database = 'correyl354'
+			conn = pymssql.connect(host, user, password, database) # Making a connection to the Cypress CSIL Server
+			mycursor = conn.cursor()
+			tablename = 'AdventureWorksLT.SalesLT.Product'
+			
+			valid_colors = [] # Array to store the valid colors to choose from, which needs to be retrieved from the database
+			valid_choice = 0 # The boolean variable to determine whether or not the input is a valid input</pre>
+			The first SQL query to the server retrieves all the product colors from the table AdventureWorksLT.SalesLT.Product to display to the user:
+			<pre class="brush: py;">
+			# Main Program
+			mycursor.execute('SELECT DISTINCT P.Color FROM '+tablename+' P WHERE P.color <> \'null\' ORDER BY P.Color') # SQL Query to output all valid colors for the user
+			row = mycursor.fetchone()
+
+			while row:
+							print("%s" % (row[0])) # Printing all valid colors
+				valid_colors.append(row[0]) # Appending all valid colors to valid_colors[]
+				row = mycursor.fetchone()</pre>
+				
+			Next, we run a while loop that takes in user input, only leaving the while loop if the user inputs a color returned from the query above:
+			<pre class="brush: py;">
+			while valid_choice == 0:
+			input_color = raw_input('What color would you like to see customer information for?\n')
+			input_color2 = input_color
+			if input_color in valid_colors:
+					if input_color == 'Silver/Black': # SQL does not allow for '/' to be part of a VIEW name, thus this input needs to have it removed
+							input_color = 'SilverBlack'
+							input_color2 = 'Silver/Black'
+					valid_choice = 1
+					viewname = input_color+'Spending'
+			else:
+					print('The color you inputted is not a valid color. Please input a valid color.\n')</pre>
 		</div>
 	</div>
 	</body>
