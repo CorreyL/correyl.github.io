@@ -37,6 +37,11 @@
 							<li><a href="#lex_source">Source Code</a></li>
 						</ul>
 					<li><a href="#parser">YACC/Bison Grammar Parser</a></li>
+						<ul>
+							<li><a href="#parser_ast">Abstract Syntax Tree</a></li>
+							<li><a href="#parser_grammar">Grammar Parser for Decaf</a></li>
+							<li><a href="#parser_source">Source Code</a></li>
+						</ul>
 					<li><a href="#codegen">LLVM Code Generation</a></li>
 					<ul>
 					</ul>
@@ -82,8 +87,8 @@
 			<li><a href="http://llvm.org/" target="_parent"><b>LLVM</b></a></li>
 		</ol>
 		<div class="section">
-			<h2 id="lex">Flex: Lexical Analyzer</h2>
-			<h1 id="lex_regexp">Regular Expressions</h1>
+			<h2 id="lex"><a href="#table-of-contents">Flex: Lexical Analyzer</a></h2>
+			<h1 id="lex_regexp"><a href="#table-of-contents">Regular Expressions</a></h1>
 			The main part of the Lexical Analyzer is composed of <a href="https://en.wikipedia.org/wiki/Regular_expression"><b>Regular Expressions</b></a>, a sequence of characters that define a search pattern, used in pattern matching with strings or string matching.</br></br>
 			
 			Simple examples of Regular Expressions are as follows:</br></br>
@@ -94,7 +99,7 @@
 			<code>(a|b)*</code> : Any number of the letters a or b in any order, or the empty string "" (* : Kleene Closure matches the preceding element(s) zero or more times)</br></br>
 			<code>(a|b)*c</code> : Starting with any number of the letters a or b in any order, or the empty string "", and ends with the letter c</br>
 			
-			<h1 id="lex_decaf">Lexical Analyzer for Decaf</h1>
+			<h1 id="lex_decaf"><a href="#table-of-contents">Lexical Analyzer for Decaf</a></h1>
 			The topic of regular expressions is a broad subject, and the above barely scratches the surface of what they're capable of.</br></br>
 			
 			The main challenge of building a Lexical Analyzer was following the <a href="http://anoopsarkar.github.io/compilers-class/decafspec.html" target="_blank"><b>Decaf Specification</b></a> and building regular expressions for the following tokens:</br>
@@ -164,7 +169,7 @@
 			As in C, variable names can be any sequence of letters, numbers and the character '_' as long as it starts with a letter. The regular expression for this is:
 			<ul>
 				<li>[a-zA-Z\_][a-zA-Z\_0-9]*   { yylval.sval = new string(yytext); return T_ID; }</li>
-			</ul>
+			</ul></br>
 			<b>Note:</b> In the regular expression, '\' indicates an escaped character in Flex, as '_' would otherwise be read as a Flex command.</br>yylval.sval defines a type that will be used in the Grammar Parser, and yytext is where the inputted variable name is stored. This allows the Grammar Parser to retrieve the variable name from the token T_ID when needed.
 		</li></br>
 		<li>
@@ -288,9 +293,36 @@
 				The function esc_char() was defined to ensure that the correct sequence of characters was stored in the token. For example, without processing the initial string in esc_char(), the token would store the string "\\\"" as that sequence of characters, as opposed to storing the intended string of "\"".
 		</li>
 	</ol>
+	<h1 id="lex_source"><a href="#table-of-contents">Source Code</a></h1>
+	The source code for the Lexical Analyzer for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
 			<h2 id="parser">YACC/Bison Grammar Parser</h2>
+			<h1 id="parser_ast"> Abstract Syntax Tree</h1>
+			An <a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree" target="_parent"><b>Abstract Syntax Tree</b></a> (hereafter AST) is the resulting parse tree that is generated from a <a href="https://en.wikipedia.org/wiki/Context-free_grammar"><b>context free grammar</b></a> (hereafter CFG).</br></br>
+			A common and simple example of an AST that can be generated from a CFG is given the CFG:</br>
+			<pre>
+		Rule 1: E -> E + T | T
+		Rule 2: T -> T * F | F
+		Rule 3: F -> [0-9]</pre>
+			Which is a CFG that is expresses a single digit, or a sequence of products and sums, where a sum will be the right most expression.</br></br>
+			An example of how an AST would be derived from this CFG is:
+			<pre>
+		Express: 1 * 2 + 3
+		
+		E -> E + T (Rule 1)
+		E + T -> T + T (Rule 1)
+		T + T -> T * F + T (Rule 2)
+		T * F + T -> F * F + T (Rule 2)
+		F * F + T -> 1 * F + T (Rule 3)
+		1 * F + T -> 1 * 2 + T (Rule 3)
+		1 * 2 + T -> 1 * 2 + F (Rule 2)
+		1 * 2 + F -> 1 * 2 + 3 (Rule 3)</pre>
+		The resulting tree from this grammar would be:</br>
+		<img src="ast_example.png"/>
+		<h1 id="parser_grammar">Grammar Parser for Decaf</h1>
+		
+		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
 		</div>
 		<div class="section">
 			<h2 id="codegen">LLVM Code Generation</h2>
