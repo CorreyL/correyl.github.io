@@ -26,7 +26,11 @@
 				<h2>Table of Contents</h2>
 				<div class="tableofcontents">
 					<li><a href="#preface">Preface</a></li>
-					<li><a href="#sql_server">SQL Server: Views</a></li>
+					<li><a href="#sql_server">SQL Server</a></li>
+					<ul>
+						<li><a href="#sql_server_views">Views</a></li>
+						<li><a href="#sql_server_sp">Stored Procedures</a></li>
+					</ul>
 					<li><a href="#client">Client-Side Infrastructure</a></li>
 					<ul>
 						<li><a href="#python">Python</a></li>
@@ -39,7 +43,7 @@
 				<h2>Preface</h2>
 				In this project, I was assigned to use the skills gained in writing SQL queries from the course and combine it with a programming language of my choice to build a simple Client-Server Interface.</br></br>
 				
-				The client needed to prompt the user to input a color, choosing from a list of colors that were associated with the products being sold.</br></br>
+				The client needed to prompt the user to input a color, choosing from a list of colors that were associated with the products being sold, and also input a price greater than the average cost of the chosen color.</br></br>
 				
 				The database that information is being retrieved from is the <a href="https://awlt2008dbscript.codeplex.com/"><b>AdventureWorksLT Database</b></a>. More specifically, I needed to retrieve four pieces of information from customers who bought products of the inputted color, including
 				<ol>
@@ -58,6 +62,7 @@
 			</div>
 			<h2 id="sql_server">SQL Server Views</h2>
 			<div class="section">
+				<h1 id="sql_server_views">Views</h1>
 				From the tables shown above, in order to retrieve the four pieces of information required, the SELECT-FROM-WHERE SQL Query needed to be:
 				<pre class="brush: sql;">
 					SELECT C.CustomerID AS CustomerID, C.FirstName AS FirstName, C.LastName AS LastName, MAX(SD.UnitPrice) AS HighestPrice
@@ -73,6 +78,20 @@
 				FROM AdventureWorksLT.SalesLT.Customer C, AdventureWorksLT.SalesLT.Product P, AdventureWorksLT.SalesLT.SalesOrderHeader SH, AdventureWorksLT.SalesLT.SalesOrderDetail SD
 				WHERE C.CustomerID = SH.CustomerID AND SH.SalesOrderID = SD.SalesOrderID AND P.ProductID = SD.ProductID AND P.Color = ''%s''
 				GROUP BY C.CustomerID, C.FirstName, C.LastName')
+				END</pre>
+			</div>
+			<div class="section">
+				<h1 id="sql_server_sp">Stored Procedures</h1>
+				In order to retrieve the Average Cost of the inputted color, the easiest way to do so would be to utilize Stored Procedures, thus the following was created:
+				<pre class="brush: sql;">
+				USE correyl354;
+				GO --begins a new batch
+				CREATE PROC spAverageCostColor(@input_color AS VARCHAR(10)) 
+				AS
+				BEGIN
+				SELECT AVG(StandardCost) AS AverageCost 
+				FROM AdventureWorksLT.SalesLT.Product P 
+				WHERE P.Color = @input_color
 				END</pre>
 			</div>
 			<h2 id="client">Client-Side Infrastructure</h2>
@@ -130,17 +149,27 @@
 					GROUP BY C.CustomerID, C.FirstName, C.LastName')
 					END""" % (viewname, viewname, input_color2) 
 				)</pre>
-				Then a query on the view associated with the inputted color is executed, and the requested information is returned one row at a time from the Cursor:
+				Then a query on the view associated with the inputted color is executed. Given that the inputted price is greater than the average cost of all the products of the inputted color, the information retrieved from the view is outputted into a HTML document:
 				<pre class="brush: py;">
-				mycursor.execute('SELECT * FROM '+input_color+'Spending ORDER BY LastName DESC') # SQL Query to retrieve the customer information on the requested color
-				row = mycursor.fetchone()
-
+				input_price = input('What PRICE would you like to see customer information for?\n')
 				if row == None: # If there is no customer information for the inputted color
 						print(input_color+' has not been purchased by any customers.')
-						
-				while row: # Printing out the customer information
-						print("CustomerID=%d, FirstName=%s, LastName=%s, HighestPrice=%d" % (row[0], row[1], row[2], row[3]))
-						row = mycursor.fetchone()</pre>
+				else:
+						if input_price > row[0]: # Comparing the inputted price with the average price of the inputted color
+								mycursor.execute('SELECT * FROM '+input_color+'Spending ORDER BY LastName DESC')
+								row = mycursor.fetchone()
+								fo = open("outputIV.html", "w")
+								fo.write("<html><body><table>\n")
+								fo.write("<table border=\"1\">\n")
+								fo.write("<td>CustomerID</td><td>First Name</td><td>Last Name</td><td>Highest Price</td>\n")
+								while row:
+										fo.write("<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td></tr>\n" % (row[0], row[1], row[2], row[3]))
+										row = mycursor.fetchone()
+								fo.write("</table></body></html>")
+								fo.close()
+								print('The customer information requested has been outputted to the file \'outputIV.html\'.')
+						else:
+								print("Price is too low for "+input_color)</pre>
 				The source code for this program is as follows:
 				<pre class="brush: py;" id="python-source">
 				import pymssql
@@ -190,19 +219,35 @@
 				mycursor.execute('SELECT * FROM '+input_color+'Spending ORDER BY LastName DESC') # SQL Query to retrieve the customer information on the requested color
 				row = mycursor.fetchone()
 
+				input_price = input('What PRICE would you like to see customer information for?\n')
 				if row == None: # If there is no customer information for the inputted color
 						print(input_color+' has not been purchased by any customers.')
-						
-				while row: # Printing out the customer information
-						print("CustomerID=%d, FirstName=%s, LastName=%s, HighestPrice=%d" % (row[0], row[1], row[2], row[3]))
-						row = mycursor.fetchone()</pre>
+				else:
+						if input_price > row[0]: # Comparing the inputted price with the average price of the inputted color
+								mycursor.execute('SELECT * FROM '+input_color+'Spending ORDER BY LastName DESC')
+								row = mycursor.fetchone()
+								fo = open("outputIV.html", "w")
+								fo.write("<html><body><table>\n")
+								fo.write("<table border=\"1\">\n")
+								fo.write("<td>CustomerID</td><td>First Name</td><td>Last Name</td><td>Highest Price</td>\n")
+								while row:
+										fo.write("<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td></tr>\n" % (row[0], row[1], row[2], row[3]))
+										row = mycursor.fetchone()
+								fo.write("</table></body></html>")
+								fo.close()
+								print('The customer information requested has been outputted to the file \'outputIV.html\'.')
+						else:
+								print("Price is too low for "+input_color)</pre>
 			</div>
 			<div class="section" id="examples">
 				<h2>Sample Executions</h2>
-				Below are some images from running the program above and querying for products of the color Red, Blue and Silver/Black:</br></br>
-				<img src="py-red.png"/></br>
-				<img src="py-blue.png"/></br>
-				<img src="py-silverblack.png"/>
+				Below are some images from running the program above and querying for products of the color Red, Blue and Silver/Black, and the resulting HTML files that were generated from the client:</br></br>
+				<h1>Red</h1>
+				<a href="red.html" target="_blank"><img src="py-red.png"/></a></br></br>
+				<h1>Blue</h1>
+				<a href="silverblack.html" target="_blank"><img src="py-blue.png"/></a></br></br>
+				<h1>Silver/Black</h1>
+				<a href="blue.html" target="_blank"><img src="py-silverblack.png"/></a>
 			</div>
 		</div>
 	</body>
