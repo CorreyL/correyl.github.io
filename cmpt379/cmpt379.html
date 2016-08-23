@@ -34,6 +34,7 @@
 						<ul>
 							<li><a href="#lex_regexp">Regular Expressions</a></li>
 							<li><a href="#lex_decaf">Lexical Analyzer for Decaf</a></li>
+							<li><a href="#lex_example01">Example of Lexical Analyzer for Decaf</a></li>
 							<li><a href="#lex_source">Source Code</a></li>
 						</ul>
 					<li><a href="#parser">YACC/Bison Grammar Parser</a></li>
@@ -112,8 +113,7 @@
 
 			%option noyywrap // A Flex option to toggle a specific setting
 
-			// Defining Regular Expressions into variables for use below
-			string  \"[^\n"]+\" 
+			// Defining Regular Expressions into variables for use below 
 			alpha   [A-Za-z]
 			dig     [0-9]
 
@@ -122,6 +122,8 @@
 			// Regular Expression         C Syntax to process the corresponding Regular Expression
 			[{alpha}\_][{alpha}\_{dig}]*  { yylval.sval = new string(yytext); return T_ID; }
 			{dig}{dig}*					  { yylval.number = conv_intconstant(yytext); return T_INTCONSTANT; }
+			= 							  { return T_ASSIGN; }
+			;							  { return T_SEMICOLON; }
 			 
 			%% // Indicates to Flex that the token definitions section is ending, and the main program is beginning
 
@@ -320,6 +322,64 @@
 				The function esc_char() was defined to ensure that the correct sequence of characters was stored in the token. For example, without processing the initial string in esc_char(), the token would store the string "\\\"" as that sequence of characters, as opposed to storing the intended string of "\"".
 		</li>
 	</ol>
+	<h1 id="lex_example01"><a href="#table-of-contents">Example of Lexical Analyzer for Decaf</a></h1>
+	The following are a couple of sample decaf programs, and what the Lexical Analyzer passes to the Grammar Parser:
+	<pre class="brush: cpp;">
+	package C {
+	func f() void {
+			x = 1;
+		}
+	}</pre>
+	The lexical analyzer would return:
+	<pre>
+	T_PACKAGE package
+	T_ID C
+	T_LCB {
+	T_FUNC func
+	T_ID f
+	T_LPAREN (
+	T_RPAREN )
+	T_VOID void
+	T_LCB {
+	T_ID x
+	T_ASSIGN =
+	T_INTCONSTANT 1
+	T_SEMICOLON ;
+	T_RCB }
+	T_RCB }</pre>
+	<pre class="brush: cpp;">
+	extern func print_string(string) void;
+
+	package Test {
+		func main() int {
+			print_string("hello, world\n");
+		}
+	}</pre>
+	The lexical analyzer would return:
+	<pre>	T_EXTERN extern
+	T_FUNC func
+	T_ID print_string
+	T_LPAREN (
+	T_STRINGTYPE string
+	T_RPAREN )
+	T_VOID void
+	T_SEMICOLON ;
+	T_PACKAGE package
+	T_ID Test
+	T_LCB {
+	T_FUNC func
+	T_ID main
+	T_LPAREN (
+	T_RPAREN )
+	T_INTTYPE int
+	T_LCB {
+	T_ID print_string
+	T_LPAREN (
+	T_STRINGCONSTANT "hello, world"
+	T_RPAREN )
+	T_SEMICOLON ;
+	T_RCB }
+	T_RCB }</pre>
 	<h1 id="lex_source"><a href="#table-of-contents">Source Code</a></h1>
 	The source code for the Lexical Analyzer for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
@@ -348,7 +408,76 @@
 		The resulting tree from this grammar would be:</br>
 		<img src="ast_example.png"/>
 		<h1 id="parser_grammar"><a href="#table-of-contents">Grammar Parser for Decaf</a></h1>
-		
+		YACC/Bison builds on the programming language C++. The basic structure of a YACC/Bison program is as follows:</br>
+		(Note that this builds upon the example .lex file as shown in <a href="#lex_decaf"><b>Lexical Analyzer for Decaf</b></a>)
+		<pre class="brush: cpp;">
+		%{ // Initial variable definitions, including the beginning C++ include/using statements
+		#include &lt;iostream>
+		#include &lt;ostream>
+		#include &lt;string>
+		#include &lt;cstdlib>
+
+		int yylex(void);
+		int yyerror(char *); 
+
+		#include "default.cc"
+
+		using namespace std;
+
+		%} // Links the tokens defined in the .lex file (the Lexical Analyzer)
+
+		%union{
+			class decafAST *ast;
+			std::string *sval;
+		}
+
+		%token <sval> T_ID
+		%token T_INTCONSTANT
+		%token T_ASSIGN
+		%token T_SEMICOLON
+
+		%% // CFG definitions begin
+
+		start: assign // Indicates to Flex how the start of a program using this grammar should be
+
+		assign: T_ID T_ASSIGN T_INTCONSTANT T_SEMICOLON // The definition of the expression 'assign', which is composed of the indicated tokens
+				{ 
+					$$ = new AssignVarAST(*$1, $3); // Calling the function that creates the AST for an assign expression
+				}
+
+		%% // Main YACC/Bison Program begins
+
+		int main() {
+			// parse the input and create the abstract syntax tree
+			int retval = yyparse();
+			return(retval >= 1 ? EXIT_FAILURE : EXIT_SUCCESS);
+		}</pre>
+		The Grammar Parser for Decaf builds ASTs by using <a href="http://www.cplusplus.com/doc/tutorial/polymorphism/"><b>C++ Polymorphism</b></a>, where decafAST is the base class:
+		<pre class="brush: cpp;">
+		/// decafAST - Base class for all abstract syntax tree nodes.
+		class decafAST {
+		public:
+			virtual ~decafAST() {}
+			virtual string str() { return string(""); }
+			virtual llvm::Value *Codegen() = 0;
+		};</pre>
+		And to build on the initial example, the AssignVarAST() function is defined as:
+		<pre class="brush: cpp;">
+		class AssignVarAST : public decafAST { // Note the use of Polymorphism
+			string VarName;
+			decafAST *Expression;
+			public:
+			AssignVarAST(string varname, decafAST *expression) : VarName(varname), Expression(expression) {}
+			~AssignVarAST() {
+				if (Expression != NULL) { delete Expression; }
+			}
+			string str() { return string("AssignVar") + "(" + VarName + "," + getString(Expression) + ")"; }
+		};</pre>
+		Note that if the function str() inside AssignVarAST is called, then it will print out it's specific AST. For example, if it were given the arguments:
+		<pre class="brush: cpp;">
+		AssignVarAST(x, 10);</pre>
+		Then the returned string would be:</br></br>
+		<code>AssignVar(x,10)</code>
 		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
 		The source code for the Grammar Parser for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
