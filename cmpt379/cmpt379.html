@@ -149,6 +149,145 @@
 	T_VOID           void
 	T_WHILE          while
 	T_WHITESPACE     whitespace (see section on Whitespace)</pre>
+	Of course, building regular expressions for some of the above are easier than others. Below are a few samples, ranging from the easier ones to the harder ones.
+	<ol>
+		<li><b>Reserved Keywords</b></br>
+			As one would expect, the regular expression for these tokens are the same as when typed in decaf, as such:
+			<ul>
+				<li>extern {return T_EXTERN;}</li>
+				<li>return {return T_RETURN;}</li>
+				<li>continue {return T_CONTINUE;}</li>
+			</ul>
+		</li></br>
+		<li>
+			<b>Variable Identifier</b></br>
+			As in C, variable names can be any sequence of letters, numbers and the character '_' as long as it starts with a letter. The regular expression for this is:
+			<ul>
+				<li>[a-zA-Z\_][a-zA-Z\_0-9]*   { yylval.sval = new string(yytext); return T_ID; }</li>
+			</ul>
+			<b>Note:</b> In the regular expression, '\' indicates an escaped character in Flex, as '_' would otherwise be read as a Flex command.</br>yylval.sval defines a type that will be used in the Grammar Parser, and yytext is where the inputted variable name is stored. This allows the Grammar Parser to retrieve the variable name from the token T_ID when needed.
+		</li></br>
+		<li>
+			<b>Escaped Characters In Character Literals</b></br>
+			As in C, character literals are any characters enclosed in single quotes, ', and treated as an integer corresponding to their ASCII integer values. The regular expression for this is:</br>
+			<pre class="brush: cpp;">
+			[']([^\\n']|[\\][nrtvfab\\\'\"])['] { 
+				char escape_check = yytext[1]; 
+				char newvar = yytext[2]; 
+				if(escape_check == '\\'){
+					yylval.number = char_lit_esc_char(newvar);
+				}
+				else{
+					yylval.number = yytext[1];
+				} 
+				return T_CHARCONSTANT;
+			}</pre>
+			In simpler terms, the regular expression above defines characters literals as:
+			<code>`'` { char | escaped_char } `'`</code></br></br>
+			Handling regular character literals is as easy as using the C function <a href="http://en.cppreference.com/w/cpp/string/byte/atoi" target="_blank"><b>atoi()</b></a>, which converts a single character to the corresponding ASCII integer value.</br></br>
+			In order to handle escaped characters however, we opted to check whether or not it was an escaped character by looking for the '\' character in the first position. Given that was the case, then we used the char_lit_esc_char() function, which is defined as follows:
+			<pre class="brush: cpp;">
+			int char_lit_esc_char(char newvar){
+				if(newvar == 'r'){
+					return 13;
+				}
+				else if(newvar == 't'){
+					return 9;
+				}
+				else if(newvar == 'f'){
+					return 12;
+				}
+				else if(newvar == 'v'){
+					return 11;
+				}
+				else if(newvar == 'n'){
+					return 10;
+				}
+				else if(newvar == '\''){
+					return 39;
+				}
+				else if(newvar == 'b'){
+					return 8;
+				}
+				else if(newvar == 'a'){
+					return 7;
+				}
+				else if(newvar == '\\'){
+					return 92;
+				}
+				else if(newvar == '"'){
+					return 34;
+				}
+				else{
+					return atoi(yytext);
+				}
+			}</pre>
+			Which determines what character is being escaped, and returning the corresponding ASCII value of the character.
+		</li></br>
+		<li>
+			<b>Escaped Characters In String Literals</b></br>
+			String literals are any sequence of characters inside of double quotes, "".This proved to be the most challenging regular expression to handle. Given that one wanted to express symbols such as ", \, or escaped characters such as new line (\n), tab (\t), etc. in a string, the lexical analyzer needs to recognise these situations and process them accordingly. As such, the regular expression for this is:</br></br>
+			<ul>
+				<li>\"([^\\"\n]|\\[nrtvfab\\'"])*\"	{ yylval.sval = esc_char(yytext); return T_STRINGCONSTANT; }</li>
+			</ul></br>
+			In simpler terms, the regular expression above defines string literals as:
+			<code>`"` { char | escaped_char } `"`</code></br></br>
+			The function esc_char() is defined as:</br>
+			<pre class="brush: cpp;">
+				string *esc_char(string os){
+					string* s = new string(os);
+					s->erase(0, 1);
+					s->pop_back();
+					int i = s->find("\\n");
+					if(i != string::npos){
+						const char* replace = "\n";
+						s->replace(s->find("\\n"), 2, replace);
+					}
+					i = s->find("\\t");
+					if(i != string::npos){
+						const char* replace = "\t";
+						s->replace(s->find("\\t"), 2, replace);
+					}
+					i = s->find("\\v");
+					if(i != string::npos){
+						const char* replace = "\v";
+						s->replace(s->find("\\v"), 2, replace);
+					}
+					i = s->find("\\r");
+					if(i != string::npos){
+						const char* replace = "\r";
+						s->replace(s->find("\\r"), 2, replace);
+					}
+					i = s->find("\\a");
+					if(i != string::npos){
+						const char* replace = "\a";
+						s->replace(s->find("\\a"), 2, replace);
+					}
+					i = s->find("\\f");
+					if(i != string::npos){
+						const char* replace = "\f";
+						s->replace(s->find("\\f"), 2, replace);
+					}
+					i = s->find("\\b");
+					if(i != string::npos){
+						const char* replace = "\b";
+						s->replace(s->find("\\b"), 2, replace);
+					}
+					i = s->rfind("\\\"");
+					if(i != string::npos){
+						const char* replace = "\"";
+						s->replace(s->find("\\\""), 2, replace);
+					}
+					i = s->find("\\\\");
+					if(i != string::npos){
+						const char* replace = "\\";
+						s->replace(s->find("\\\\"), 2, replace);
+					}
+					return s;
+				}</pre>
+				The function esc_char() was defined to ensure that the correct sequence of characters was stored in the token. For example, without processing the initial string in esc_char(), the token would store the string "\\\"" as that sequence of characters, as opposed to storing the intended string of "\"".
+		</li>
+	</ol>
 		</div>
 		<div class="section">
 			<h2 id="parser">YACC/Bison Grammar Parser</h2>
