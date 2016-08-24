@@ -50,7 +50,15 @@
 					<li><a href="#codegen">LLVM Code Generation</a></li>
 					<ul>
 						<li><a href="#codegen_ir">Intermediate Representation</a></li>
+						<li><a href="#codegen_symboltable">Symbol Tables</a></li>
 						<li><a href="#codegen_codegen">Code Generation for Decaf</a></li>
+						<li><a href="#codegen_source">Source Code</a></li>
+					</ul>
+					<li><a href="#compiler_example00">Examples of Decaf Compiler</a></li>
+					<ul>
+						<li><a href="#compiler_example01">Greatest Common Divisor (Recursive Function)</a></li>
+						<li><a href="#compiler_example02">Chaining Function Calls</a></li>
+						<li><a href="#compiler_example03">Boolean Short Circuiting</a></li>
 					</ul>
 				</table>
 			</div>
@@ -95,7 +103,7 @@
 		</ol>
 		<div class="section">
 			<h1 id="proj_repo">Project Repository</h1>
-			All of the files for this project can be found <a href=""><b>here</b></a>.
+			All of the files for this project can be found <a href="https://github.com/CorreyL/compiler/tree/master/assign4/answer"><b>here</b></a>.
 			<h2 id="lex"><a href="#table-of-contents">Flex: Lexical Analyzer</a></h2>
 			<h1 id="lex_regexp"><a href="#table-of-contents">Regular Expressions</a></h1>
 			The main part of the Lexical Analyzer is composed of <a href="https://en.wikipedia.org/wiki/Regular_expression"><b>Regular Expressions</b></a>, a sequence of characters that define a search pattern, used in pattern matching with strings or string matching.</br></br>
@@ -396,7 +404,7 @@
 	T_RCB }
 	T_RCB }</pre>
 	<h1 id="lex_source"><a href="#table-of-contents">Source Code</a></h1>
-	The source code for the Lexical Analyzer for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
+	The source code for the Lexical Analyzer for Decaf can be found <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.lex" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
 			<h2 id="parser">YACC/Bison Grammar Parser</h2>
@@ -492,8 +500,8 @@
 		<pre class="brush: cpp;">
 		AssignVarAST(x, 10);</pre>
 		Then the returned string would be:</br></br>
-		<code>AssignVar(x,10)</code></br></br>
-		As such, every expression needs its own defined AST class, which can be found in <a href=""><b>decafcomp.cc</b></a></br></br>
+		<code>AssignVar(x,1)</code></br></br>
+		As such, every expression needs its own defined AST class, which can be found in <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.cc"><b>decafcomp.cc</b></a></br></br>
 		Notable challenges when implementing the Grammar Parser was handling multiple ways to define the same action. For example, as is valid in C++, Decaf supports typecasting multiple variables in one line, in addition to other variable declarations on separate lines, like so:
 		<pre class="brush: cpp;">
 		var a bool;
@@ -604,7 +612,7 @@
 		print_string,VoidType,VarDef("hello, world!\n",StringType)
 	),Package(Test,None,None))</pre>
 		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
-		The source code for the Grammar Parser for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
+		The source code for the Grammar Parser for Decaf can be found <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.y" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
 			<h2 id="codegen">LLVM Code Generation</h2>
@@ -618,8 +626,15 @@
 				ret void
 			}</pre>
 			Using the LLVM Library proved to be the most challenging part of the course, <a href="http://llvm.org/docs/doxygen/html/classes.html" target="_parent"><b>as the LLVM API is quite large</b></a>.
+			<h1 id="codegen_symboltable"><a href="#table-of-contents">Symbol Tables</a></h1>
+			Before going into Code Generation, the data structure of <a href="https://en.wikipedia.org/wiki/Symbol_table" target="_parent"><b>Symbol Tables</b></a> should be briefly noted.</br></br>
+			As with many other programming languages, <a href="https://en.wikipedia.org/wiki/Scope_(computer_science)" target="_parent"><b>Scope</b></a> is taken into account in Decaf as well. Whenever we enter a new scope (ie. Whenever a left curly brace { is used), a new Symbol Table is pushed on to the stack of Symbol Tables.</br></br>
+			
+			Inside of a particular Scope, any variable definitions are stored inside of the most recent Symbol Table pushed on to the stack. If we leave the Scope (ie. Whenever a right curly brace } is used), the most recent Symbol Table is popped off the stack, and any variable definitions within the popped off Symbol Table is lost.</br></br>
+			
+			It is important to note that the Decaf Compiler also supports <a href="https://en.wikipedia.org/wiki/Variable_shadowing" target="_parent"><b>Variable Shadowing</b></a>; if the most recent Symbol Table does not contain a variable that has been called, we traverse the rest of the stack to see if we can find the variable having been defined before the current scope.</br>
 			<h1 id="codegen_codegen"><a href="#table-of-contents">Code Generation for Decaf</a></h1>
-			Within the base class decafAST(), we added a virtual function 'codegen()':
+			Within the base class decafAST(), we added a virtual function 'Codegen()':
 			<pre class="brush: cpp;">
 			class decafAST {
 			public:
@@ -627,7 +642,7 @@
 				virtual string str() { return string(""); }
 				virtual llvm::Value *Codegen() = 0;
 			};</pre>
-			The Compiler traverses the generated AST, and when an AST object has its codegen() function called, the LLVM library is utilized to generate the associated code.</br></br>
+			The Compiler traverses the generated AST, and when an AST object has its Codegen() function called, the LLVM library is utilized to generate the associated code.</br></br>
 			To build on the example of assign.decaf, I've modified the code slightly:
 			<pre class="brush: cpp;">
 			// assign.decaf
@@ -639,7 +654,7 @@
 					print_int(x);
 				}
 				func main() int{ // Defining the main() function
-					func f(); // Calling f(), defined above
+					f(); // Calling f(), defined above
 				}
 			}</pre>
 			Note how I've added a call to define the externally defined print_int() from the Decaf Standard Library, added print_int() inside of the f() definition, defined a main() function and call f() inside of it.</br></br>
@@ -658,7 +673,7 @@
 				tablenumber--;
 				delete $2;
 			}</pre>
-			The most important aspect of the above code is line 6, wherein $5 (method_decl_list) has its codegen() function called. Method_decl_list is a list of method_decl, which is defined as:
+			The most important aspect of the above code is line 6, wherein $5 (method_decl_list) has its Codegen() function called. Method_decl_list is a list of method_decl, which is defined as:
 			<pre class="brush: cpp;">
 			method_decl: T_FUNC T_ID T_LPAREN method_var_list T_RPAREN method_type method_block {
 				if(*$2 == "main"){
@@ -672,7 +687,7 @@
 			}
 			;</pre>
 			In this case, two MethodDeclAST objects are created, one for f() and one for main().</br></br>
-			For both, the same codegen() function is called:
+			For both, the same Codegen() function is called:
 			<pre class="brush: cpp;">
 			Value* MethodDeclAST::Codegen() {
 				symtable->new_symtbl(); // Creates a new symbol table since we're entering a new block of code
@@ -688,7 +703,7 @@
 				}
 				// ...
 			}</pre>
-			gen_function_def() is defined as follows:
+			gen_function_def() is what generates the LLVM code for f(), which is defined as follows:
 			<pre class="brush: cpp;">
 			llvm::Function *gen_function_def(list<Value*> &FunctionArgs, string FunctionName, string FunctionType, vector<string> &FunctionArgsName, MethodBlockAST* mblock){
 			llvm::FunctionType *FT;
@@ -734,13 +749,14 @@
 				verifyFunction(*TheFunction);
 				return TheFunction;
 			}</pre>
-			While complicated due to the nature of the LLVM API, calling gen_function_def() generates the function definition in LLVM, resulting in:
+			While complicated due to the nature of the LLVM C++ API, calling gen_function_def() generates the function definition in LLVM, resulting in:
 			<pre class="brush: plain;">
 			define void @f() {
 				entry:
 				; Note that the insertion point is here, so when the block of code inside the function declaration for f() 
-				; has its codegen() function run, all of it will go in here.
+				; has its Codegen() function run, all of it will go in here.
 			}</pre>
+			The remainder of MethodDeclAST generates the LLVM Code for the body of f():
 			<pre class="brush: cpp;">
 			Value* MethodDeclAST::Codegen() {
 				// ...
@@ -751,7 +767,7 @@
 				symtable->remove_symtbl(); // Exiting a block of code, need to remove the symbol table
 				Builder.ClearInsertionPoint(); // Tells LLVM to stop writing code in for this block
 			}</pre>
-			Note how a call to codegen() is done inside a codegen() definition. This recursive nature of calling codegen() is how we're able to traverse the AST with only a single call. This recursive codegen() call generates the body of the function in LLVM. To see how it specifically does that, we need to look at MBlock->Codegen, which is of the type BlockAST::Codegen():</br></br>
+			Note how a call to Codegen() is done inside a Codegen() definition. This recursive nature of calling Codegen() is how we're able to traverse the AST with only a single call at decafpackage. This recursive Codegen() call generates the body of the function in LLVM. To see how it specifically does that, we need to look at MBlock->Codegen, which is of the type BlockAST::Codegen():</br></br>
 			<pre class="brush: cpp;">
 			Value* BlockAST::Codegen() {
 				symtable->new_symtbl();
@@ -765,19 +781,15 @@
 			<pre class="brush: cpp;">
 			Value* MethodVarListAST::Codegen() {
 				AllocaInst *Alloca;
-				errstr("MethodVarList, MethodVars.size() = " + to_string(MethodVars.size()));
 				while(MethodVars.size() != 0){
 					VarDefAST* vd = getFront();
-					errstr("MethodVarListAST VarDef: Name = " + vd->Name + ", Type: " + vd->VarType);
 					if(retrieve_front_type()=="IntType"){
-						errstr("MethodVarList IntType Store Alloca in table " + to_string(tablenumber));
 						Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), nullptr, retrieve_front());
 						Builder.CreateStore(Builder.getInt32(0), Alloca); // Zero initialize
 					}
 					else if(retrieve_front_type()=="BoolType"){
 						Alloca = Builder.CreateAlloca(Type::getInt1Ty(getGlobalContext()), nullptr, retrieve_front());
 						Builder.CreateStore(Builder.getInt1(0), Alloca); // Zero initialize
-						errstr("MethodVarList BoolType Store Alloca in table " + to_string(tablenumber));
 					}
 					else{
 						throw runtime_error("This type is not recognised.");
@@ -786,7 +798,6 @@
 					temp->lineno = lineno;
 					temp->mem_loca = Alloca;
 					symtable->enter_symtbl(retrieve_front(), temp);
-					errstr("Added symbol " + retrieve_front() + " in table " + to_string(tablenumber));
 					MethodVars.pop_front();
 				}
 			}</pre>
@@ -801,7 +812,7 @@
 			<pre class="brush: cpp;">
 			x = 1;
 			print_int(x);</pre>
-			Two Codegen() definitions will be called:
+			These two Codegen() functions will be called:
 			<pre class="brush: cpp;">
 			Value* AssignVarAST::Codegen() {
 				descriptor* temp = NULL;
@@ -811,27 +822,37 @@
 				if(temp == NULL){throw runtime_error("AssignVarAST::This variable has not been declared.");}
 				llvm::AllocaInst* Alloca = temp->mem_loca;
 				Builder.CreateStore(Val, Alloca);
-				errstr("AssignVarAST CreateStore " + VarName);
 			}
 			
 			// ...
 			
-			class MethodCallAST : public decafAST{
-				string MethodName;
-				decafStmtList* Expression;
-				public:
-				MethodCallAST(string methodname, decafStmtList* expression) : MethodName(methodname), Expression(expression) {}
-				~MethodCallAST(){
-					if (Expression != NULL){
-							delete Expression;
+			Value* MethodCallAST::Codegen() {
+				Function *CallFunc = TheModule->getFunction(MethodName);
+				if (CallFunc == 0){
+					throw runtime_error("could not find the function requested.");
+				}
+
+				vector<Value*> FuncArgs;
+				if(Expression != NULL){ // An empty DecafStmtList is registered as NULL
+					if(Expression->size() != 0){
+						FuncArgs = Expression->VectorOfArgs(); //return AllArts(stmts), vector of Values
+						// Vector of args, takes list and push_back
 					}
 				}
-				virtual Value* Codegen();
-				decafStmtList* returnArgs(){
-					return Expression;
+
+				// Check if the function has a return type void
+				Value *V;
+				if (Expression != NULL){
+					V = Expression->Codegen();
 				}
-				string str() { return string("MethodCall") + "(" + MethodName + "," + getString(Expression) + ")"; }
-			};</pre>
+				if(MethodName == "print_int" && V->getType()->isIntegerTy(1)){
+
+					V = Builder.CreateZExt(V, Builder.getInt32Ty(), "zexttmp");
+					return Builder.CreateCall(CallFunc, V, "calltmp");
+				}
+				bool isVoid = CallFunc->getReturnType()->isVoidTy();
+				return Builder.CreateCall(FunctionProtos[MethodName], FuncArgs, isVoid ? "" : "calltmp");
+			}</pre>
 			Note that MethodCallAST::Codegen() has recursive Codegen() calls as well, which simply retrieves the variable being called in its argument, in this case x:
 			<pre class="brush: cpp">
 			Value* VariableExprAST::Codegen() {
@@ -844,15 +865,319 @@
 				else{
 					V = access->globvar_mem_loca;
 				}
-				errstr("VariableExpr create Load " + Value);
 				return Builder.CreateLoad(V,Value);
 			}
 			else{
 				throw runtime_error("VariableExprAST: This variable has not been defined inside the Symbol Table");</pre>
-			<h1>Symbol Tables</h1>
-			<h1>Control Flow Graph</h1>
+			This retrieves the value of x from the Symbol Table. The LLVM definition of f() is now fully generated:</br>
+			<pre class="brush: plain">
+			define void @f() {
+			entry:
+				%x = alloca i32
+				store i32 0, i32* %x
+				store i32 1, i32* %x
+				%x1 = load i32, i32* %x
+				%calltmp = call i32 @print_int(i32 %x1)
+				ret void
+			}</pre>
+			For main(), recall that gen_main_def() was called in MethodDeclAST::Codegen(), which is defined as:
+			<pre class="brush: cpp;">
+			llvm::Function *gen_main_def() {
+				// Create the top-level definition for main
+				llvm::FunctionType *FT = llvm::FunctionType::get(llvm::IntegerType::get(llvm::getGlobalContext(), 32), false);
+				llvm::Function *TheFunction = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "main", TheModule);
+				if (TheFunction == 0) {
+					throw runtime_error("empty function block");
+				}
+				// Create a new basic block which contains a sequence of LLVM instructions
+				llvm::BasicBlock *BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", TheFunction);
+				// All subsequent calls to IRBuilder will place instructions in this location
+				Builder.SetInsertPoint(BB);
+				Builder.CreateRet(ConstantInt::get(getGlobalContext(), APInt(32, 1)));
+				Builder.SetInsertPoint(BB, TheFunction->getEntryBlock().begin());
+				CurrentFunction = TheFunction;
+				return TheFunction;
+			}</pre>
+			Similar to gen_function_def(), but less complicated since main() is only ever generated with it. Currently, the LLVM code looks like
+			<pre class="brush: plain">
+			define i32 @main() {
+			entry:
+				; Note that the insertion point is here, so when the block of code inside main() 
+				; has its Codegen() function run, all of it will go in here. 
+				ret i32 1
+			}</pre>
+			Note that a return does not have to be explicitly made in the .decaf code, but is a requirement in LLVM, thus it defaults to <code> return 1</code>.</br></br>
+			Main only has a single statement inside of it, a method call to f(), thus MethodCallAST::Codegen() is called again, which reuslts in:
+			<pre class="brush: plain">
+			define i32 @main() {
+			entry:
+				call void @f()
+				ret i32 1
+			}</pre>
+			All together, the resulting code generated from the Decaf Compiler is:
+			<pre class="brush: plain">
+			; ModuleID = 'module for very simple expressions'
+
+			declare i32 @print_int(i32)
+
+			define void @f() {
+			entry:
+				%x = alloca i32
+				store i32 0, i32* %x
+				store i32 1, i32* %x
+				%x1 = load i32, i32* %x
+				%x2 = load i32, i32* %x
+				%calltmp = call i32 @print_int(i32 %x1)
+				ret void
+			}
+
+			define i32 @main() {
+			entry:
+				call void @f()
+				ret i32 1
+			}</pre>
+			As expected, we get the desired result when we run the LLVM Code:
+			<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./decafcomp < test.decaf 2> test.ll
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./run-llvm-code.sh test.ll
+	1</pre>
 			<h1 id="codegen_source">Source Code</h1>
-			The source code for the Code Generation can be found <a href=""><b>here</b></a>.
+			The source code for the Code Generation can be found <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.y#L536" target="_parent"><b>here</b></a>.
 		</div>
+		<div class="section">
+		<h2 id="compiler_example00">Examples of Decaf Compiler</h2>
+		<h1 id="compiler_example01"><a href="#table-of-contents">Greatest Common Divisor (Recursive Function)</a></h1>
+		From the Preface, demonstrating the capability of recursive function calling:
+		<pre class="brush: cpp;">
+		extern func print_int(int) void;
+
+		package GreatestCommonDivisor {
+			var a int = 10;
+			var b int = 20;
+
+			func main() int {
+				var x, y, z int;
+				x = a;
+				y = b;
+				z = gcd(x, y);
+
+				// print_int is part of the standard input-output library
+				print_int(z);
+			}
+
+			// function that computes the greatest common divisor
+			func gcd(a int, b int) int {
+				if (b == 0) { return(a); }
+				else { return( gcd(b, a % b) ); }
+			}
+		}</pre>
+		Generates the LLVM Code:
+		<pre class="brush: plain;">
+		; ModuleID = 'module for very simple expressions'
+
+		@a = internal global i32 10
+		@b = internal global i32 20
+
+		declare i32 @print_int(i32)
+
+		define i32 @gcd(i32 %a, i32 %b) {
+		entry:
+			%a1 = alloca i32
+			store i32 %a, i32* %a1
+			%b2 = alloca i32
+			store i32 %b, i32* %b2
+			%b3 = load i32, i32* %b2
+			%eqtemp = icmp eq i32 %b3, 0
+			%if-cond = icmp ne i1 %eqtemp, false
+			br i1 %if-cond, label %then5, label %else
+
+		then5:                                            ; preds = %entry
+			%a4 = load i32, i32* %a1
+			ret i32 %a4
+
+		else:                                             ; preds = %entry
+			%b6 = load i32, i32* %b2
+			%a7 = load i32, i32* %a1
+			%b8 = load i32, i32* %b2
+			%sremtemp = srem i32 %a7, %b8
+			%b9 = load i32, i32* %b2
+			%a10 = load i32, i32* %a1
+			%b11 = load i32, i32* %b2
+			%sremtemp12 = srem i32 %a10, %b11
+			%calltmp = call i32 @gcd(i32 %b6, i32 %sremtemp)
+			ret i32 %calltmp
+		}
+
+		define i32 @main() {
+		entry:
+			%x = alloca i32
+			store i32 0, i32* %x
+			%y = alloca i32
+			store i32 0, i32* %y
+			%z = alloca i32
+			store i32 0, i32* %z
+			%a = load i32, i32* @a
+			store i32 %a, i32* %x
+			%b = load i32, i32* @b
+			store i32 %b, i32* %y
+			%x1 = load i32, i32* %x
+			%y2 = load i32, i32* %y
+			%x3 = load i32, i32* %x
+			%y4 = load i32, i32* %y
+			%calltmp = call i32 @gcd(i32 %x1, i32 %y2)
+			store i32 %calltmp, i32* %z
+			%z5 = load i32, i32* %z
+			%z6 = load i32, i32* %z
+			%calltmp7 = call i32 @print_int(i32 %z5)
+			ret i32 1
+		}</pre>
+		(Note the use of <a href="https://en.wikipedia.org/wiki/Control_flow_graph" target="_parent"><b>Control Flow</b></a> for the if/else statement.)</br></br>
+		When run, we get:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./decafcomp < ../testcases/dev/gcd.decaf 2> test.ll
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./run-llvm-code.sh test.ll
+	10</pre>
+		<h1 id="compiler_example02"><a href="#table-of-contents">Chaining Function Calls</a></h1>
+		A chain of function calls can also be done:
+		<pre class="brush: cpp;">
+		extern func print_int(int) void;
+
+		package Test {
+				func test3(a int) void {
+						print_int(a);
+				}
+				func test2(a int) void {
+						print_int(a);
+						test3(a + 1);
+				}
+				func test1(a int) void {
+						print_int(a);
+						test2(a + 1);
+				}
+				func main() int {
+						test1(1);
+				}
+		}</pre>
+		Which generates the LLVM Code:
+		<pre class="brush: plain;">
+		declare i32 @print_int(i32)
+
+		define void @test3(i32 %a) {
+		entry:
+			%a1 = alloca i32
+			store i32 %a, i32* %a1
+			%a2 = load i32, i32* %a1
+			%a3 = load i32, i32* %a1
+			%calltmp = call i32 @print_int(i32 %a2)
+			ret void
+		}
+
+		define void @test2(i32 %a) {
+		entry:
+			%a1 = alloca i32
+			store i32 %a, i32* %a1
+			%a2 = load i32, i32* %a1
+			%a3 = load i32, i32* %a1
+			%calltmp = call i32 @print_int(i32 %a2)
+			%a4 = load i32, i32* %a1
+			%addtmp = add i32 %a4, 1
+			%a5 = load i32, i32* %a1
+			%addtmp6 = add i32 %a5, 1
+			call void @test3(i32 %addtmp)
+			ret void
+		}
+
+		define void @test1(i32 %a) {
+		entry:
+			%a1 = alloca i32
+			store i32 %a, i32* %a1
+			%a2 = load i32, i32* %a1
+			%a3 = load i32, i32* %a1
+			%calltmp = call i32 @print_int(i32 %a2)
+			%a4 = load i32, i32* %a1
+			%addtmp = add i32 %a4, 1
+			%a5 = load i32, i32* %a1
+			%addtmp6 = add i32 %a5, 1
+			call void @test2(i32 %addtmp)
+			ret void
+		}
+
+		define i32 @main() {
+		entry:
+			call void @test1(i32 1)
+			ret i32 1
+		}</pre>
+		When run, we get the following result:
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./decafcomp < ../testcases/dev/intcallchain3expr.decaf 2> test.ll
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./run-llvm-code.sh test.ll
+	123</pre>
+		<h1 id="compiler_example03"><a href="#table-of-contents">GBoolean Short Circuiting</a></h1>
+		<a href="https://en.wikipedia.org/wiki/Short-circuit_evaluation" target="_parent"><b>Boolean Short Circuiting</b></a> is also supported in the Decaf Compiler:
+		<pre class="brush: cpp;">
+		extern func print_int(int) void;
+		extern func print_string(string) void;
+
+		package foo {
+				func foo() bool {
+						print_string("foo");
+						return(false);
+				}
+				func main() int {
+						var flag bool;
+						flag = true || foo() && !true;
+						print_int(flag);
+				}
+		}</pre>
+		Note that the function foo() should not be called given that short circuiting is supported, thus print_string("foo") should not occur.</br></br>
+		The following LLVM Code is generated:
+		<pre class="brush: plain;">
+		; ModuleID = 'module for very simple expressions'
+
+		@globalstring = private unnamed_addr constant [4 x i8] c"foo\00"
+		@globalstring.1 = private unnamed_addr constant [4 x i8] c"foo\00"
+
+		declare i32 @print_int(i32)
+
+		declare void @print_string(i8*)
+
+		define i1 @foo() {
+		entry:
+			call void @print_string(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @globalstring, i32 0, i32 0))
+			ret i1 false
+		}
+
+		define i32 @main() {
+		entry:
+			%flag = alloca i1
+			store i1 false, i1* %flag
+			br i1 true, label %orend, label %orfalse
+			ret i32 1
+
+		orfalse:                                          ; preds = %entry
+			%calltmp = call i1 @foo()
+			br i1 %calltmp, label %andtrue, label %andend
+
+		orend:                                            ; preds = %andend, %entry
+			%phival1 = phi i1 [ true, %entry ], [ %phival, %andend ]
+			store i1 %phival1, i1* %flag
+			%flag2 = load i1, i1* %flag
+			%flag3 = load i1, i1* %flag
+			%zexttmp = zext i1 %flag3 to i32
+			%calltmp4 = call i32 @print_int(i32 %zexttmp)
+
+		andtrue:                                          ; preds = %orfalse
+			br label %andend
+
+		andend:                                           ; preds = %andtrue, %orfalse
+			%phival = phi i1 [ %calltmp, %orfalse ], [ false, %andtrue ]
+			br label %orend
+		}</pre>
+		Which gives us the following result:</br>
+		<pre>
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./decafcomp < ../testcases/dev/skct.decaf 2> test.ll
+	vagrant@vagrant-ubuntu-trusty-32:~/cmpt379/assign1/assign4/answer$ ./run-llvm-code.sh test.ll
+	1</pre>
+	Note how the string "foo" is not printed, thanks to short-circuit evaluation.
 	</div>
 </html>
