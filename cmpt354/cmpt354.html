@@ -67,8 +67,8 @@
 				<pre class="brush: sql;">
 					SELECT C.CustomerID AS CustomerID, C.FirstName AS FirstName, C.LastName AS LastName, MAX(SD.UnitPrice) AS HighestPrice
 					FROM AdventureWorksLT.SalesLT.Customer C, AdventureWorksLT.SalesLT.Product P, AdventureWorksLT.SalesLT.SalesOrderHeader SH, AdventureWorksLT.SalesLT.SalesOrderDetail SD
-					WHERE C.CustomerID = SH.CustomerID AND SH.SalesOrderID = SD.SalesOrderID AND P.ProductID = SD.ProductID AND P.Color = ''%s'' /* The color inputted from the client */
-					GROUP BY C.CustomerID, C.FirstName, C.LastName' /* In order to use the function MAX() in the SELECT clause*/</pre>
+					WHERE C.CustomerID = SH.CustomerID AND SH.SalesOrderID = SD.SalesOrderID AND P.ProductID = SD.ProductID AND P.Color = ''%s'' -- The color inputted from the client
+					GROUP BY C.CustomerID, C.FirstName, C.LastName' -- In order to use the function MAX() in the SELECT clause</pre>
 				In order to save the SQL Server from having to redundantly process the same query, the client was set to only perform the above SELECT-FROM-WHERE query if a view for the color did not already exist, thus:
 				<pre class="brush: sql;">
 				IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='%s' AND xtype='V')
@@ -128,6 +128,7 @@
 				<pre class="brush: py;">
 				while valid_choice == 0:
 				input_color = raw_input('What color would you like to see customer information for?\n')
+				input_color = input_color.title() # Ensures that if the color is inputted in lowercase, the system still recognises the input
 				input_color2 = input_color
 				if input_color in valid_colors:
 						if input_color == 'Silver/Black': # SQL does not allow for '/' to be part of a VIEW name, thus this input needs to have it removed
@@ -195,6 +196,7 @@
 
 				while valid_choice == 0:
 						input_color = raw_input('What color would you like to see customer information for?\n')
+						input_color = input_color.title() # Ensures that if the color is inputted in lowercase, the system still recognises the input
 						input_color2 = input_color
 						if input_color in valid_colors:
 								if input_color == 'Silver/Black': # SQL does not allow for '/' to be part of a VIEW name, thus this input needs to have it removed
@@ -241,13 +243,13 @@
 			</div>
 			<div class="section" id="examples">
 				<h2>Sample Executions</h2>
-				Below are some images from running the program above and querying for products of the color Red, Blue and Silver/Black, and the resulting HTML files that were generated from the client:</br></br>
+				Below are some images from running the program above and querying for products of the color Red, Blue and Silver/Black, and the resulting HTML files that were generated from the client:</br>
 				<h1>Red</h1>
-				<a href="red.html" target="_blank"><img src="py-red.png"/></a></br></br>
+				<img src="python-red.png"/><a href="red.html" target="_blank"><img src="py-red.png"/></a></br>
 				<h1>Blue</h1>
-				<a href="silverblack.html" target="_blank"><img src="py-blue.png"/></a></br></br>
+				<img src="python-blue.png"/><a href="silverblack.html" target="_blank"><img src="py-blue.png"/></a></br>
 				<h1>Silver/Black</h1>
-				<a href="blue.html" target="_blank"><img src="py-silverblack.png"/></a>
+				<img src="python-silverblack.png"/><a href="blue.html" target="_blank"><img src="py-silverblack.png"/></a>
 			</div>
 		</div>
 	</body>
