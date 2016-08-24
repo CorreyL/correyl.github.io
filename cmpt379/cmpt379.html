@@ -633,7 +633,79 @@
 			
 			Inside of a particular Scope, any variable definitions are stored inside of the most recent Symbol Table pushed on to the stack. If we leave the Scope (ie. Whenever a right curly brace } is used), the most recent Symbol Table is popped off the stack, and any variable definitions within the popped off Symbol Table is lost.</br></br>
 			
-			It is important to note that the Decaf Compiler also supports <a href="https://en.wikipedia.org/wiki/Variable_shadowing" target="_parent"><b>Variable Shadowing</b></a>; if the most recent Symbol Table does not contain a variable that has been called, we traverse the rest of the stack to see if we can find the variable having been defined before the current scope.</br>
+			It is important to note that the Decaf Compiler also supports <a href="https://en.wikipedia.org/wiki/Variable_shadowing" target="_parent"><b>Variable Shadowing</b></a>; if the most recent Symbol Table does not contain a variable that has been called, we traverse the rest of the stack to see if we can find the variable having been defined before the current scope.</br></br>
+			
+			The Source Code for our implementation of a Symbol Table is as follows:
+			<pre class="brush: cpp;">
+			typedef struct{
+				int lineno;
+				string type;
+				string* reg_dest; // Register Destination
+				llvm::AllocaInst* mem_loca = NULL; // Memory Address Location
+				llvm::GlobalVariable* globvar_mem_loca = NULL;
+				llvm::ArrayType* array_type = NULL;
+				bool spilled; // Spilled "indicates if the value is to be found in a register or in memory"
+				llvm::Value* Val = NULL;
+			} descriptor;
+			
+			// ... 
+			
+			class symboltable{
+			public:
+				symboltable() {
+				}
+
+				void new_symtbl() {
+					symbol_table *new_symtbl = new symbol_table();
+					symtbl.push_front(new_symtbl);
+				}
+
+				void pop_symtbl() {
+					if (symtbl.empty())
+						throw runtime_error("no symbol table to remove here!");
+					symtbl.pop_front();
+				}
+
+				void remove_symtbl() {
+					symbol_table *tbl;
+					if (symtbl.empty())
+						throw runtime_error("no symbol table to remove here!");
+					else
+						tbl = symtbl.front();
+				tbl->clear();
+				delete(tbl);
+					symtbl.pop_front();
+				}
+
+				void enter_symtbl(string ident, descriptor *d) {
+					symbol_table *tbl;
+					symbol_table::iterator find_ident;
+
+					if (symtbl.empty())
+						throw runtime_error("no symbol table created yet!");
+
+					tbl = symtbl.front();
+					if ((find_ident = tbl->find(ident)) != tbl->end()) {
+						if(SymTblErr){ cerr << "Warning: redefining previously defined identifier: " << ident << endl; }
+						delete(find_ident->second);
+						tbl->erase(ident);
+					}
+					(*tbl)[ident] = d;
+				}
+
+				descriptor* access_symtbl(string ident) {
+					for (symbol_table_list::iterator i = symtbl.begin(); i != symtbl.end(); ++i) {
+						symbol_table::iterator find_ident;
+						if ((find_ident = (*i)->find(ident)) != (*i)->end()) return find_ident->second;
+					}
+					return NULL;
+				}
+
+			private:
+				typedef map&lt;string, descriptor* > symbol_table;
+				typedef list&lt;symbol_table* > symbol_table_list;
+				symbol_table_list symtbl;
+			};</pre>
 			<h1 id="codegen_codegen"><a href="#table-of-contents">Code Generation for Decaf</a></h1>
 			Within the base class decafAST(), we added a virtual function 'Codegen()':
 			<pre class="brush: cpp;">
