@@ -30,6 +30,9 @@
 			<div class="tableofcontents">
 				<table>
 					<li><a href="#preface">Preface</a></li>
+					<ul>
+						<li><a href="#proj_repo">Project Repository</a></li>
+					</ul>
 					<li><a href="#lex">Flex: Lexical Analyzer</a></li>
 						<ul>
 							<li><a href="#lex_regexp">Regular Expressions</a></li>
@@ -41,10 +44,13 @@
 						<ul>
 							<li><a href="#parser_ast">Abstract Syntax Tree</a></li>
 							<li><a href="#parser_grammar">Grammar Parser for Decaf</a></li>
+							<li><a href="#parser_example01">Example of Grammar Parser for Decaf</a></li>
 							<li><a href="#parser_source">Source Code</a></li>
 						</ul>
 					<li><a href="#codegen">LLVM Code Generation</a></li>
 					<ul>
+						<li><a href="#codegen_ir">Intermediate Representation</a></li>
+						<li><a href="#codegen_codegen">Code Generation for Decaf</a></li>
 					</ul>
 				</table>
 			</div>
@@ -88,6 +94,8 @@
 			<li><a href="http://llvm.org/" target="_parent"><b>LLVM</b></a></li>
 		</ol>
 		<div class="section">
+			<h1 id="proj_repo">Project Repository</h1>
+			All of the files for this project can be found <a href=""><b>here</b></a>.
 			<h2 id="lex"><a href="#table-of-contents">Flex: Lexical Analyzer</a></h2>
 			<h1 id="lex_regexp"><a href="#table-of-contents">Regular Expressions</a></h1>
 			The main part of the Lexical Analyzer is composed of <a href="https://en.wikipedia.org/wiki/Regular_expression"><b>Regular Expressions</b></a>, a sequence of characters that define a search pattern, used in pattern matching with strings or string matching.</br></br>
@@ -325,8 +333,10 @@
 	<h1 id="lex_example01"><a href="#table-of-contents">Example of Lexical Analyzer for Decaf</a></h1>
 	The following are a couple of sample decaf programs, and what the Lexical Analyzer passes to the Grammar Parser:
 	<pre class="brush: cpp;">
+	// assign.decaf
 	package C {
 	func f() void {
+			var x int;
 			x = 1;
 		}
 	}</pre>
@@ -341,6 +351,10 @@
 	T_RPAREN )
 	T_VOID void
 	T_LCB {
+	T_VAR var
+	T_ID x
+	T_INT int
+	T_SEMICOLON ;
 	T_ID x
 	T_ASSIGN =
 	T_INTCONSTANT 1
@@ -348,6 +362,7 @@
 	T_RCB }
 	T_RCB }</pre>
 	<pre class="brush: cpp;">
+	// stringconst1.decaf
 	extern func print_string(string) void;
 
 	package Test {
@@ -452,7 +467,7 @@
 			int retval = yyparse();
 			return(retval >= 1 ? EXIT_FAILURE : EXIT_SUCCESS);
 		}</pre>
-		The Grammar Parser for Decaf builds ASTs by using <a href="http://www.cplusplus.com/doc/tutorial/polymorphism/"><b>C++ Polymorphism</b></a>, where decafAST is the base class:
+		The Grammar Parser for Decaf builds ASTs by using <a href="http://www.cplusplus.com/doc/tutorial/polymorphism/" target="_parent"><b>C++ Polymorphism</b></a>, where decafAST is the base class:
 		<pre class="brush: cpp;">
 		/// decafAST - Base class for all abstract syntax tree nodes.
 		class decafAST {
@@ -478,6 +493,7 @@
 		AssignVarAST(x, 10);</pre>
 		Then the returned string would be:</br></br>
 		<code>AssignVar(x,10)</code></br></br>
+		As such, every expression needs its own defined AST class, which can be found in <a href=""><b>decafcomp.cc</b></a></br></br>
 		Notable challenges when implementing the Grammar Parser was handling multiple ways to define the same action. For example, as is valid in C++, Decaf supports typecasting multiple variables in one line, in addition to other variable declarations on separate lines, like so:
 		<pre class="brush: cpp;">
 		var a bool;
@@ -551,11 +567,292 @@
 					IdList *temp = (IdList*)$3;
 					temp->addVar(*$1); $$ = temp;
 			}</pre>
+		<h1 id="parser_example01"><a href="#table-of-contents">Example of Grammar Parser for Decaf</a></h1>
+		To build upon the previous examples in <a href="#lex_example01"><b>'Example of Lexical Analyzer for Decaf'</b></a>:
+		<pre class="brush: cpp;">
+		// assign.decaf
+		package C {
+		func f() void {
+				var x int;
+				x = 1;
+			}
+		}</pre>
+		The grammar parser would return:
+		<pre>
+	Program(None,Package(
+			C,None,Method(
+				f,VoidType,None,MethodBlock(
+					None,AssignVar(
+						x,NumberExpr(1)
+					)
+				)
+			)
+		)
+	)</pre>
+		<pre class="brush: cpp;">
+		// stringconst1.decaf
+		extern func print_string(string) void;
+
+		package Test {
+			func main() int {
+				print_string("hello, world\n");
+			}
+		}</pre>
+		The grammar parser would return:
+		<pre>
+	Program(ExternFunction(
+		print_string,VoidType,VarDef("hello, world!\n",StringType)
+	),Package(Test,None,None))</pre>
 		<h1 id="parser_source"><a href="#table-of-contents">Source Code</a></h1>
 		The source code for the Grammar Parser for Decaf can be found <a href="" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
 			<h2 id="codegen">LLVM Code Generation</h2>
+			<h1 id="codegen_ir"><a href="#table-of-contents">Intermediate Representation</a></h1>
+			We used LLVM to generate an <a href="https://en.wikipedia.org/wiki/Intermediate_representation" target="_parent"><b>Intermediate Representation</b></a>, which in terms of complexity falls in between high-level languages (such as C/C++) and low-level languages (such as assembly). A sample LLVM program is as follows:
+			<pre class="brush: plain;">
+			define void @f() {
+			entry:
+				%x = alloca i32 ; Allocating memory for the variable x for a 32-bit integer
+				store i32 1, i32* %x ; Storing the value 1 into the variable x
+				ret void
+			}</pre>
+			Using the LLVM Library proved to be the most challenging part of the course, <a href="http://llvm.org/docs/doxygen/html/classes.html" target="_parent"><b>as the LLVM API is quite large</b></a>.
+			<h1 id="codegen_codegen"><a href="#table-of-contents">Code Generation for Decaf</a></h1>
+			Within the base class decafAST(), we added a virtual function 'codegen()':
+			<pre class="brush: cpp;">
+			class decafAST {
+			public:
+				virtual ~decafAST() {}
+				virtual string str() { return string(""); }
+				virtual llvm::Value *Codegen() = 0;
+			};</pre>
+			The Compiler traverses the generated AST, and when an AST object has its codegen() function called, the LLVM library is utilized to generate the associated code.</br></br>
+			To build on the example of assign.decaf, I've modified the code slightly:
+			<pre class="brush: cpp;">
+			// assign.decaf
+			extern func print_int(int) void; // Importing the function print_int() from the Decaf Standard Library
+			package C {
+				func f() void { // Defining the function f()
+					var x int;
+					x = 1;
+					print_int(x);
+				}
+				func main() int{ // Defining the main() function
+					func f(); // Calling f(), defined above
+				}
+			}</pre>
+			Note how I've added a call to define the externally defined print_int() from the Decaf Standard Library, added print_int() inside of the f() definition, defined a main() function and call f() inside of it.</br></br>
+			The expected output from this program after it has been compiled and run should be:</br></br>
+			<code>1</code></br></br>
+			To walk through the code, we begin with PackageAST():
+			<pre class="brush: cpp;">
+			decafpackage: T_PACKAGE T_ID T_LCB field_decl_list method_decl_list T_RCB
+			{ $$ = new PackageAST(*$2, (IdList *)$4, (decafStmtList *)$5);
+				symtable->new_symtbl(); // For FieldDeclList (Global Sym Table)
+				tablenumber++;
+				$4->Codegen();
+				$5->Codegen();
+				if(SavingMain != NULL){SavingMain->Codegen();}
+				symtable->remove_symtbl();
+				tablenumber--;
+				delete $2;
+			}</pre>
+			The most important aspect of the above code is line 6, wherein $5 (method_decl_list) has its codegen() function called. Method_decl_list is a list of method_decl, which is defined as:
+			<pre class="brush: cpp;">
+			method_decl: T_FUNC T_ID T_LPAREN method_var_list T_RPAREN method_type method_block {
+				if(*$2 == "main"){
+					SavingMain = new MethodDeclAST(*$2, *$6, (MethodVarListAST *)$4, (MethodBlockAST *)$7);
+					$$ = SavingMain;
+				}
+				else{
+					$$ = new MethodDeclAST(*$2, *$6, (MethodVarListAST *)$4, (MethodBlockAST *)$7);
+				}
+				delete $2;
+			}
+			;</pre>
+			In this case, two MethodDeclAST objects are created, one for f() and one for main().</br></br>
+			For both, the same codegen() function is called:
+			<pre class="brush: cpp;">
+			Value* MethodDeclAST::Codegen() {
+				symtable->new_symtbl(); // Creates a new symbol table since we're entering a new block of code
+				if (Name == "main"){ // The function being defined is main()
+					gen_main_def();
+				}
+				else{ // The function being defined is not main, thus we need to retrieve its arguments, if any
+					list&lt;Value*> ArgTypes;
+					vector&lt;string> ArgNames;
+					MethodVarsList->FillOutArgs(ArgTypes, ArgNames); // Needed for functionArgs push_back Type* (either bool or int)
+
+					FunctionProtos[Name] = gen_function_def(ArgTypes, Name, methodType, ArgNames, MBlock); // NeededForFunctionArgs & FunctionArgsName is passed by reference, so we don't need to empty it
+				}
+				// ...
+			}</pre>
+			gen_function_def() is defined as follows:
+			<pre class="brush: cpp;">
+			llvm::Function *gen_function_def(list<Value*> &FunctionArgs, string FunctionName, string FunctionType, vector<string> &FunctionArgsName, MethodBlockAST* mblock){
+			llvm::FunctionType *FT;
+				vector<Type*> FunctionArgTypes;
+				int i = 0;
+				list<Value*> AllocaFuncArgs;
+				while( !FunctionArgs.empty() ){
+					//Changing all function args to back temp
+					FunctionArgTypes.push_back(FunctionArgs.front()->getType());
+					AllocaFuncArgs.push_back(FunctionArgs.front());
+					FunctionArgs.pop_front();
+				}
+				FT = get_function_type(FunctionType, FunctionArgTypes);
+				/*FUNCTION DECLARATION*/
+				llvm::Function *TheFunction = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, FunctionName, TheModule);
+				if (TheFunction->getName() != FunctionName){
+					TheFunction->eraseFromParent();
+					TheFunction = TheModule->getFunction(FunctionName);
+					if (!TheFunction->empty()){
+						throw runtime_error("ERROR: redefinition of function");
+						//return 0;
+					}
+				}
+				if (TheFunction == 0) {
+					throw runtime_error("empty function block");
+				}
+				setFuncArgs(TheFunction, FunctionArgsName);
+				// Create a new basic block which contains a sequence of LLVM instructions
+				llvm::BasicBlock *BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", TheFunction);
+				// All subsequent calls to IRBuilder will place instructions in this location
+				Builder.SetInsertPoint(BB);
+				while( !AllocaFuncArgs.empty() ){
+					AllocaInst* Alloca;
+					llvm::Type* tempType = AllocaFuncArgs.front()->getType();
+					Alloca = defineVariable(tempType, FunctionArgsName[i]);
+					AllocaFuncArgs.pop_front();
+					i++;
+				}
+				llvm::BasicBlock *CurBB = Builder.GetInsertBlock();
+				//Gives you a link to the current basic block
+				llvm::Function *func = Builder.GetInsertBlock()->getParent();
+
+				verifyFunction(*TheFunction);
+				return TheFunction;
+			}</pre>
+			While complicated due to the nature of the LLVM API, calling gen_function_def() generates the function definition in LLVM, resulting in:
+			<pre class="brush: plain;">
+			define void @f() {
+				entry:
+				; Note that the insertion point is here, so when the block of code inside the function declaration for f() 
+				; has its codegen() function run, all of it will go in here.
+			}</pre>
+			<pre class="brush: cpp;">
+			Value* MethodDeclAST::Codegen() {
+				// ...
+				Value* ReturnTy = MBlock->Codegen(); // Performing the codegen for the block of code within the function declaration
+				if(methodType == "VoidType"){
+					Builder.CreateRet(NULL);
+				}
+				symtable->remove_symtbl(); // Exiting a block of code, need to remove the symbol table
+				Builder.ClearInsertionPoint(); // Tells LLVM to stop writing code in for this block
+			}</pre>
+			Note how a call to codegen() is done inside a codegen() definition. This recursive nature of calling codegen() is how we're able to traverse the AST with only a single call. This recursive codegen() call generates the body of the function in LLVM. To see how it specifically does that, we need to look at MBlock->Codegen, which is of the type BlockAST::Codegen():</br></br>
+			<pre class="brush: cpp;">
+			Value* BlockAST::Codegen() {
+				symtable->new_symtbl();
+				tablenumber++;
+				BlockVarDefs->Codegen();
+				BlockStatementList->Codegen();
+				symtable->remove_symtbl();
+				tablenumber--;
+			}</pre>
+			Once again, note the recursive Codegen() calls. It is important to note that Decaf requires all variable declarations to be done before any statements can be called, unlike many programming languages where variable and statements can be done interchangably. BlockVarDefs->Codegen() calls the MethodVarListAST::Codegen() definition:</br>
+			<pre class="brush: cpp;">
+			Value* MethodVarListAST::Codegen() {
+				AllocaInst *Alloca;
+				errstr("MethodVarList, MethodVars.size() = " + to_string(MethodVars.size()));
+				while(MethodVars.size() != 0){
+					VarDefAST* vd = getFront();
+					errstr("MethodVarListAST VarDef: Name = " + vd->Name + ", Type: " + vd->VarType);
+					if(retrieve_front_type()=="IntType"){
+						errstr("MethodVarList IntType Store Alloca in table " + to_string(tablenumber));
+						Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), nullptr, retrieve_front());
+						Builder.CreateStore(Builder.getInt32(0), Alloca); // Zero initialize
+					}
+					else if(retrieve_front_type()=="BoolType"){
+						Alloca = Builder.CreateAlloca(Type::getInt1Ty(getGlobalContext()), nullptr, retrieve_front());
+						Builder.CreateStore(Builder.getInt1(0), Alloca); // Zero initialize
+						errstr("MethodVarList BoolType Store Alloca in table " + to_string(tablenumber));
+					}
+					else{
+						throw runtime_error("This type is not recognised.");
+					}
+					descriptor* temp = new descriptor; // Adding the variable to the symbol table
+					temp->lineno = lineno;
+					temp->mem_loca = Alloca;
+					symtable->enter_symtbl(retrieve_front(), temp);
+					errstr("Added symbol " + retrieve_front() + " in table " + to_string(tablenumber));
+					MethodVars.pop_front();
+				}
+			}</pre>
+			The resulting LLVM code is now:
+			<pre class="brush: plain;">
+			define void @f() {
+			entry:
+				%x = alloca i32
+				store i32 0, i32* %x ; All variables in Decaf are zero initialized
+			}</pre>
+			Next, BlockStatementList->Codegen() is done. Since there are two statements,
+			<pre class="brush: cpp;">
+			x = 1;
+			print_int(x);</pre>
+			Two Codegen() definitions will be called:
+			<pre class="brush: cpp;">
+			Value* AssignVarAST::Codegen() {
+				descriptor* temp = NULL;
+				llvm::Value *V = Expression->Codegen();
+				setValue(V);
+				temp = symtable->access_symtbl(VarName);
+				if(temp == NULL){throw runtime_error("AssignVarAST::This variable has not been declared.");}
+				llvm::AllocaInst* Alloca = temp->mem_loca;
+				Builder.CreateStore(Val, Alloca);
+				errstr("AssignVarAST CreateStore " + VarName);
+			}
+			
+			// ...
+			
+			class MethodCallAST : public decafAST{
+				string MethodName;
+				decafStmtList* Expression;
+				public:
+				MethodCallAST(string methodname, decafStmtList* expression) : MethodName(methodname), Expression(expression) {}
+				~MethodCallAST(){
+					if (Expression != NULL){
+							delete Expression;
+					}
+				}
+				virtual Value* Codegen();
+				decafStmtList* returnArgs(){
+					return Expression;
+				}
+				string str() { return string("MethodCall") + "(" + MethodName + "," + getString(Expression) + ")"; }
+			};</pre>
+			Note that MethodCallAST::Codegen() has recursive Codegen() calls as well, which simply retrieves the variable being called in its argument, in this case x:
+			<pre class="brush: cpp">
+			Value* VariableExprAST::Codegen() {
+			descriptor* access = symtable->access_symtbl(Value);
+			if( access != NULL ){
+				llvm::Value *V;
+				if(access->mem_loca != NULL){
+					V = access->mem_loca;
+				}
+				else{
+					V = access->globvar_mem_loca;
+				}
+				errstr("VariableExpr create Load " + Value);
+				return Builder.CreateLoad(V,Value);
+			}
+			else{
+				throw runtime_error("VariableExprAST: This variable has not been defined inside the Symbol Table");</pre>
+			<h1>Symbol Tables</h1>
+			<h1>Control Flow Graph</h1>
+			<h1 id="codegen_source">Source Code</h1>
+			The source code for the Code Generation can be found <a href=""><b>here</b></a>.
 		</div>
 	</div>
 </html>
