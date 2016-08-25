@@ -117,7 +117,7 @@
 			<code>(a|b)*</code> : Any number of the letters a or b in any order, or the empty string "" (* : Kleene Closure matches the preceding element(s) zero or more times)</br></br>
 			<code>(a|b)*c</code> : Starting with any number of the letters a or b in any order, or the empty string "", and ends with the letter c</br></br>
 			The topic of regular expressions is a broad subject, and the above barely scratches the surface of what they're capable of.</br>
-			<h1 id="lex_decaf"><a href="#table-of-contents">Lexical Analyzer for Decaf</a></h1>
+			<h1 id="lex_decaf"><a href="#table-of-contents">Lexical Analyzer for Decaf (decafcomp.lex)</a></h1>
 			Flex builds upon the the programming language C. The basic structure of a Flex program is demonstrated below:
 			<pre class="brush: cpp;">
 			%{ // Indicates to Flex that C syntax is going to be enclosed inside the {}
@@ -431,7 +431,7 @@
 		1 * 2 + F -> 1 * 2 + 3 (Rule 3)</pre>
 		The resulting tree from this grammar would be:</br>
 		<img src="ast_example.png"/>
-		<h1 id="parser_grammar"><a href="#table-of-contents">Grammar Parser for Decaf</a></h1>
+		<h1 id="parser_grammar"><a href="#table-of-contents">Grammar Parser for Decaf (decafcomp.y)</a></h1>
 		YACC/Bison builds on the programming language C++. The basic structure of a YACC/Bison program is as follows:</br>
 		(Note that this builds upon the example .lex file as shown in <a href="#lex_decaf"><b>Lexical Analyzer for Decaf</b></a>)
 		<pre class="brush: cpp;">
@@ -616,7 +616,7 @@
 		The source code for the Grammar Parser for Decaf can be found <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.y" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
-			<h2 id="codegen">LLVM Code Generation</h2>
+			<h2 id="codegen">LLVM Code Generation (decafcomp.y)</h2>
 			<h1 id="codegen_ir"><a href="#table-of-contents">Intermediate Representation</a></h1>
 			We used LLVM to generate an <a href="https://en.wikipedia.org/wiki/Intermediate_representation" target="_parent"><b>Intermediate Representation</b></a>, which in terms of complexity falls in between high-level languages (such as C/C++) and low-level languages (such as assembly). A sample LLVM program is as follows:
 			<pre class="brush: plain;">
