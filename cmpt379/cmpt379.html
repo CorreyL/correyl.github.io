@@ -616,7 +616,7 @@
 		The source code for the Grammar Parser for Decaf can be found <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.y" target="_parent"><b>here</b></a>.
 		</div>
 		<div class="section">
-			<h2 id="codegen">LLVM Code Generation (decafcomp.y)</h2>
+			<h2 id="codegen">LLVM Code Generation</h2>
 			<h1 id="codegen_ir"><a href="#table-of-contents">Intermediate Representation</a></h1>
 			We used LLVM to generate an <a href="https://en.wikipedia.org/wiki/Intermediate_representation" target="_parent"><b>Intermediate Representation</b></a>, which in terms of complexity falls in between high-level languages (such as C/C++) and low-level languages (such as assembly). A sample LLVM program is as follows:
 			<pre class="brush: plain;">
@@ -706,7 +706,7 @@
 				typedef list&lt;symbol_table* > symbol_table_list;
 				symbol_table_list symtbl;
 			};</pre>
-			<h1 id="codegen_codegen"><a href="#table-of-contents">Code Generation for Decaf</a></h1>
+			<h1 id="codegen_codegen"><a href="#table-of-contents">Code Generation for Decaf (decafcomp.y)</a></h1>
 			Within the base class decafAST(), we added a virtual function 'Codegen()':
 			<pre class="brush: cpp;">
 			class decafAST {
