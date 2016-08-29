@@ -35,6 +35,11 @@ p.messingaround{
 	font-size:10px;
 	font-family: "Ubuntu Mono";
 }
+
+div.qualifications{
+	font-family: 'Raleway', sans-serif;
+	font-size:15px;
+}
 div.tableofcontents{
     background-color: #f8f8f8;
 		border-style: groove;
@@ -85,8 +90,8 @@ div.bottom {
 	right: 0px;
 	font-size:10px;
 }
-body {font-family: 'Raleway', sans-serif;
-			font-size:15px;}
+body {font-family: verdana;
+			font-size:13px;}
 a:link {color:black;
 			 text-decoration: none;}
 a:visited {color:black;}
