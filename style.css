@@ -4,9 +4,36 @@
 }
 .photos {font-family:Monaco;
 				font-size:13px;}
-.intro {
-	font-family:Futura;
+div.intro {
+  background-image: 
+    linear-gradient(
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5)
+    ),
+    url(contemplation.png);
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	background-position: 50% 25%;
+	color:white;
+}
+
+p.header{
+	font-family: 'Lora', serif;
 	font-size:48px;
+	margin-left: 100px;
+}
+
+p.desc{
+	margin-left: 100px;
+	font-size:24px;
+	font-family: 'Slabo 27px', serif;
+}
+
+p.messingaround{
+	font-size:10px;
+	font-family: "Ubuntu Mono";
 }
 div.tableofcontents{
     background-color: #f8f8f8;
