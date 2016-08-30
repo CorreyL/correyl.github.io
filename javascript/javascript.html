@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+	<head>
+		<script type="text/javascript">
+			function people(name, age){
+				this.name = name;
+				this.age = age;
+				this.yearsUntilRetire = yearsLeft;
+			}
+			function yearsLeft(){
+				var numYears = 65 - this.age;
+				return this.name + " can retire in " + numYears + " years";
+			}
+			var correy = new people("Correy", 24);
+		</script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			document.write(correy.yearsUntilRetire()+"</br>");
+			var nums = [4,5,6];
+			var nums2 = [1,2,3];
+			var total = nums2.concat(nums);
+			for(var i = 0;i<total.length;i = i + 1){
+				document.write(total[i]+"</br>");
+			}			
+		</script>
+	</body>
+</html>
