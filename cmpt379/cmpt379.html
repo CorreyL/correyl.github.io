@@ -501,7 +501,7 @@
 		<pre class="brush: cpp;">
 		AssignVarAST(x, 10);</pre>
 		Then the returned string would be:</br></br>
-		<code>AssignVar(x,1)</code></br></br>
+		<code>AssignVar(x,10)</code></br></br>
 		As such, every expression needs its own defined AST class, which can be found in <a href="https://github.com/CorreyL/compiler/blob/master/assign4/answer/decafcomp.cc"><b>decafcomp.cc</b></a></br></br>
 		Notable challenges when implementing the Grammar Parser was handling multiple ways to define the same action. For example, as is valid in C++, Decaf supports typecasting multiple variables in one line, in addition to other variable declarations on separate lines, like so:
 		<pre class="brush: cpp;">
